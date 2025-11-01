@@ -1,0 +1,71 @@
+version: '3.9'
+
+services:
+  # Database
+  db:
+    image: postgres:15
+    container_name: vendabela_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-vendabela}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-vendabela}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    command: >
+      postgres
+      -c max_connections=100
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+
+  # Database Admin
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "${ADMINER_PORT:-8080}:8080"
+    depends_on:
+      - db
+
+  # Core Service
+  core:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vendabela_core
+    restart: always
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-vendabela}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-vendabela}
+    depends_on:
+      - db
+    volumes:
+      - /app/node_modules
+
+  # Commerce Service
+  # commerce:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: vendabela_commerce
+  #   restart: always
+  #   ports:
+  #     - "${PORT_COMMERCE:-3001}:3001"
+  #   environment:
+  #     - NODE_ENV=${NODE_ENV:-production}
+  #     - DATABASE_URL=postgresql://${POSTGRES_USER:-vendabela}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-vendabela}
+  #   depends_on:
+  #     - db
+  #   volumes:
+  #     - /app/node_modules
+
+volumes:
+  postgres_data:

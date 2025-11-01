@@ -1,0 +1,389 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String        @id @default(uuid())
+  name      String
+  whatsapp  String        @unique
+  otpCode   String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  planId    String
+  addresses Address[]
+  clients   Client[]
+  products  Product[]
+  orders    Order[]
+  companies UserCompany[]
+  plan      Plan          @relation(fields: [planId], references: [id])
+  feedbacks UserFeedback[]
+  raffles   Raffle[]
+  carts     Cart[]
+  favorites Favorite[]
+
+  @@map("users")
+}
+
+model Plan {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  price       Float    @default(0.0)
+  features    Json?
+  isInternal  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  users       User[]
+
+  @@map("plans")
+}
+
+model Segment {
+  id        String        @id @default(uuid())
+  name      String        @unique
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  userCompanies UserCompany[]
+
+  @@map("segments")
+}
+
+model Company {
+  id         String        @id @default(uuid())
+  name       String
+  identifier String?       @unique
+  isPrivate  Boolean       @default(false)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  clients    Client[]
+  products   Product[]
+  orders     Order[]
+  users      UserCompany[]
+  raffles    Raffle[]
+  carts      Cart[]
+  favorites  Favorite[]
+
+  @@map("companies")
+}
+
+model UserCompany {
+  id            String      @id @default(uuid())
+  userId        String
+  companyId     String
+  segmentId     String
+  role          CompanyRole @default(CONSULTANT)
+  createdAt     DateTime    @default(now())
+  company       Company     @relation(fields: [companyId], references: [id])
+  user          User        @relation(fields: [userId], references: [id])
+  segment       Segment     @relation(fields: [segmentId], references: [id])
+
+  @@unique([userId, companyId])
+  @@map("user_companies")
+}
+
+model Client {
+  id            String    @id @default(uuid())
+  name          String
+  phone         String?   @unique
+  email         String?   @unique
+  birthday      DateTime?
+  origin        String?
+  leadScore     Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  userId        String
+  companyId     String
+  addresses     Address[]
+  company       Company   @relation(fields: [companyId], references: [id])
+  user          User      @relation(fields: [userId], references: [id])
+  orders        Order[]
+  raffleEntries RaffleEntry[]
+
+  @@map("clients")
+}
+
+model Address {
+  id         String   @id @default(uuid())
+  name       String?
+  street     String
+  number     String?
+  complement String?
+  district   String?
+  city       String
+  state      String
+  zipCode    String
+  latitude   Float?
+  longitude  Float?
+  isPrimary  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  userId     String?
+  clientId   String?
+  client     Client?  @relation(fields: [clientId], references: [id])
+  user       User?    @relation(fields: [userId], references: [id])
+  orders     Order[]  @relation("OrderAddress")
+
+  @@map("addresses")
+}
+
+model Product {
+  id              String        @id @default(uuid())
+  name            String
+  category        String?
+  sku             String?       @unique
+  description     String?
+  imageUrls       String[]      @default([])
+  recommendations String[]      @default([])
+  usageNotes      String?
+  costPrice       Float         @default(0.0)
+  lastPrice       Float         @default(0.0)
+  salePrice       Float         @default(0.0)
+  stock           Int           @default(0)
+  hasSample       Boolean       @default(false)
+  sampleQuantity  Int?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  companyId       String
+  userId          String
+
+  company         Company       @relation(fields: [companyId], references: [id])
+  user            User          @relation(fields: [userId], references: [id])
+  orders          OrderProduct[]
+  cartItems       CartItem[]
+  favorites       Favorite[]
+
+  @@map("products")
+}
+
+model Order {
+  id          String        @id @default(uuid())
+  status      OrderStatus   @default(OPEN)
+  total       Float         @default(0.0)
+  discount    Float         @default(0.0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  userId      String
+  clientId    String
+  companyId   String
+  addressId   String?
+  products    OrderProduct[]
+  payments    Payment[]
+
+  address     Address?      @relation("OrderAddress", fields: [addressId], references: [id])
+  client      Client        @relation(fields: [clientId], references: [id])
+  company     Company       @relation(fields: [companyId], references: [id])
+  user        User          @relation(fields: [userId], references: [id])
+
+  @@map("orders")
+}
+
+model OrderProduct {
+  id        String  @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int     @default(1)
+  price     Float   @default(0.0)
+  product   Product @relation(fields: [productId], references: [id])
+  order     Order   @relation(fields: [orderId], references: [id])
+
+  @@map("order_products")
+}
+
+enum CompanyRole {
+  CONSUMER       // Cliente final
+  CONSULTANT     // Consultora (quem vende)
+  DIRECTOR       // Diretora (superior hierárquico das consultoras)
+  COMPANY_ADMIN  // Admin da empresa ou da rede
+  STORE          // Loja física / unidade comercial
+}
+
+enum OrderStatus {
+  OPEN
+  PAID
+  DELIVERED
+  CANCELED
+}
+
+model UserFeedback {
+  id                      String     @id @default(uuid())
+  testerName              String
+  whatsapp                String?    // opcional — útil para captação de lead ou contato posterior
+  screen                  String?    // tela/funcionalidade testada (ex: "Tela de Login", "Carrinho", etc.)
+  worked                  Boolean?   // indica se funcionou ou não
+  description             String?    // descrição do que foi testado ou problema encontrado
+  improvementSuggestion   String?    // sugestão de melhoria (ex: “botão poderia ser mais visível”)
+  untestedReason          String?    // se algo não foi testado, o motivo (ex: "não estava implementado")
+  createdAt               DateTime   @default(now())
+  updatedAt               DateTime   @updatedAt
+
+  // Campos relacionados a sessão de teste
+  sessionId               String?
+  session                 TestSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  // Se quiser atrelar futuramente a um usuário do sistema
+  userId                  String?    
+  user                    User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("user_feedbacks")
+}
+
+model TestSession {
+  id          String          @id @default(uuid())
+  testerName  String
+  whatsapp    String?
+  startedAt   DateTime        @default(now())
+  endedAt     DateTime?
+  context     Json?
+  feedbacks   UserFeedback[]
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@map("test_sessions")
+}
+
+model Raffle {
+  id          String        @id @default(uuid())
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  drawDate    DateTime
+  maxEntries  Int?
+  isActive    Boolean       @default(true)
+  isDrawn     Boolean       @default(false)
+  prize       String?
+  prizeValue  Float?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  companyId   String
+  userId      String
+
+  company     Company       @relation(fields: [companyId], references: [id])
+  user        User          @relation(fields: [userId], references: [id])
+  entries     RaffleEntry[]
+
+  @@map("raffles")
+}
+
+model RaffleEntry {
+  id        String   @id @default(uuid())
+  clientId  String
+  raffleId  String
+  entryDate DateTime @default(now())
+  isWinner  Boolean  @default(false)
+  code      String   @unique // Código único para o sorteio (ex: "A5D9F2")
+
+  client    Client   @relation(fields: [clientId], references: [id])
+  raffle    Raffle   @relation(fields: [raffleId], references: [id])
+
+  @@unique([clientId, raffleId])
+  @@map("raffle_entries")
+}
+
+enum DeliveryMethod {
+  ENTREGA
+  BUSCAR_NO_LOCAL
+}
+
+model Cart {
+  id              String      @id @default(uuid())
+  userId          String?     @unique()
+  sessionId       String?     // se anônimo
+  companyId       String      // empresa dona dos produtos
+  
+  // Entrega / Frete
+  cep             String?     // usado para cálculo de frete
+  deliveryMethod  String?     // ex: "PAC", "Sedex", "Retirada"
+  deliveryFee     Float?      // valor do frete estimado
+  estimatedDays   Int?        // prazo de entrega em dias
+
+  // Descontos / Totais
+  couponCode      String?     // código do cupom aplicado
+  discountValue   Float?      // valor total do desconto
+  totalAmount     Float?      // subtotal dos itens - desconto + frete
+
+  // Controle
+  expiresAt       DateTime?   // expiração do carrinho
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Relacionamentos
+  user            User?       @relation(fields: [userId], references: [id])
+  company         Company     @relation(fields: [companyId], references: [id])
+  items           CartItem[]
+
+  @@index([userId])
+  @@index([sessionId])
+  @@index([companyId])
+  @@unique([userId, companyId], name: "cart_user_company_unique")
+  @@unique([sessionId, companyId], name: "cart_session_company_unique")
+
+  @@map("carts")
+}
+
+model CartItem {
+  id          String   @id @default(uuid())
+  cartId      String
+  productId   String
+  quantity    Int
+  price       Float    // snapshot do preço no momento da adição
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  cart        Cart     @relation(fields: [cartId], references: [id])
+  product     Product  @relation(fields: [productId], references: [id])
+
+  @@index([cartId])
+
+  @@map("cart_items")
+}
+
+model Favorite {
+  id          String   @id @default(uuid())
+  userId      String
+  companyId   String
+  productId   String
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id])
+  product     Product  @relation(fields: [productId], references: [id])
+  company     Company  @relation(fields: [companyId], references: [id])
+
+  @@unique([userId, productId])
+
+  @@map("favorites")
+}
+
+model Payment {
+  id          String          @id @default(uuid())
+  orderId     String
+  method      PaymentMethod
+  qrCode      String?
+  pixPayload  String?
+  status      PaymentStatus   @default(PENDING)
+  createdAt   DateTime        @default(now())
+
+  order       Order           @relation(fields: [orderId], references: [id])
+
+  @@map("payments")
+}
+
+enum PaymentMethod {
+  CASH
+  PIX
+  CREDIT_CARD
+  DEBIT_CARD
+  BILL
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
