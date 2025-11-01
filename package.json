@@ -1,6 +1,6 @@
 {
   "name": "@vendabela",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "",
   "author": "",
   "private": true,
@@ -20,8 +20,8 @@
     "start:dev:commerce": "nest start commerce --watch --preserveWatchOutput --config tsconfig.dev.json",
     "start:debug": "nest start --debug --watch",
     "start:debug:commerce": "nest start commerce --debug --watch --config tsconfig.dev.json",
-    "start:prod": "node dist/main",
-    "start:prod:commerce": "node dist/main_commerce",
+    "start:prod": "node dist/main.js",
+    "start:prod:commerce": "node dist/main_commerce.js",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
