@@ -1,4 +1,4 @@
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -28,13 +28,22 @@ RUN echo "=== Contents of /app ===" && ls -la /app/
 RUN echo "=== Contents of dist/ ===" && ls -la dist/ || echo "dist/ directory does not exist"
 RUN echo "=== Build output check ===" && find . -name "main.js" -type f 2>/dev/null || echo "main.js not found anywhere"
 
-# Verify build output exists
+# Verify build output exists and find main.js location
 RUN test -d dist/ || (echo "Build failed - dist directory not found" && exit 1)
-RUN test -f dist/src/main.js || (echo "Build failed - dist/src/main.js not found. Contents of dist/:" && ls -laR dist/ && exit 1)
+RUN if [ -f dist/main.js ]; then \
+      echo "Build output found at dist/main.js" && \
+      echo "MAIN_JS_PATH=dist/main.js" > /tmp/build_path.env; \
+    elif [ -f dist/src/main.js ]; then \
+      echo "Build output found at dist/src/main.js" && \
+      echo "MAIN_JS_PATH=dist/src/main.js" > /tmp/build_path.env; \
+    else \
+      echo "Build failed - main.js not found in dist/ or dist/src/" && \
+      ls -laR dist/ && exit 1; \
+    fi
 RUN echo "Build successful! Files in dist:" && ls -la dist/
 
 # Production stage
-FROM node:18-alpine AS production
+FROM node:20-alpine AS production
 
 WORKDIR /app
 
@@ -51,10 +60,23 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 # Copy built application
 COPY --from=builder /app/dist ./dist
 
-# Verify files exist
-RUN ls -la dist/ && test -f dist/src/main.js || (echo "ERROR: dist/src/main.js not found!" && exit 1)
+# Verify files exist and set the correct path
+RUN if [ -f dist/main.js ]; then \
+      echo "Using dist/main.js" && \
+      echo '#!/bin/sh' > /start.sh && \
+      echo 'exec node dist/main.js "$@"' >> /start.sh && \
+      chmod +x /start.sh; \
+    elif [ -f dist/src/main.js ]; then \
+      echo "Using dist/src/main.js" && \
+      echo '#!/bin/sh' > /start.sh && \
+      echo 'exec node dist/src/main.js "$@"' >> /start.sh && \
+      chmod +x /start.sh; \
+    else \
+      echo "ERROR: main.js not found in dist/ or dist/src/!" && \
+      ls -laR dist/ && exit 1; \
+    fi
 
 EXPOSE 3000
 
-# Run directly with node
-CMD ["node", "dist/src/main.js"]
+# Run using the start script that detects the correct path
+CMD ["/start.sh"]
