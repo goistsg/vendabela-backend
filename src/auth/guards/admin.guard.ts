@@ -1,5 +1,4 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
-import { CompanyRole } from '@prisma/client';
 
 @Injectable()
 export class AdminGuard implements CanActivate {

@@ -17,7 +17,7 @@ export class UpdateUserCompanyDto {
   @ApiProperty({
     description: 'Papel/função do usuário na empresa',
     enum: CompanyRole,
-    example: CompanyRole.CONSULTORA,
+    example: CompanyRole.CONSULTANT,
     required: false,
   })
   @IsOptional()

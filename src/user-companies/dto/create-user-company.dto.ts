@@ -2,10 +2,11 @@ import { IsNotEmpty, IsString, IsUUID, IsEnum, IsOptional } from 'class-validato
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum CompanyRole {
-  CONSULTORA = 'CONSULTORA',
-  DIRETORA = 'DIRETORA',
-  LOJA = 'LOJA',
-  ADMIN_EMPRESA = 'ADMIN_EMPRESA',
+  CONSUMER = 'CONSUMER', // Cliente final
+  CONSULTANT = 'CONSULTANT', // Consultora (quem vende)
+  DIRECTOR = 'DIRECTOR', // Diretora (superior hierárquico das consultoras)
+  COMPANY_ADMIN = 'COMPANY_ADMIN', // Admin da empresa ou da rede
+  STORE = 'STORE', // Loja física / unidade comercial
 }
 
 export class CreateUserCompanyDto {
@@ -42,7 +43,7 @@ export class CreateUserCompanyDto {
   @ApiProperty({
     description: 'Papel/função do usuário na empresa',
     enum: CompanyRole,
-    example: CompanyRole.CONSULTORA,
+    example: CompanyRole.CONSULTANT,
     required: false,
   })
   @IsOptional()
