@@ -36,6 +36,18 @@ export class ProductsService {
     });
   }
 
+  async findAllByCompany(companyId: string, userId?: string) {
+    const whereClause = userId ? { companyId, userId } : { companyId };
+
+    return this.prisma.product.findMany({
+      where: whereClause,
+      include: { 
+        company: true,
+        user: true
+      },
+    });
+  }
+
   async findSamples(userId?: string) {
     const whereClause = userId ? { userId, hasSample: true } : { hasSample: true };
 

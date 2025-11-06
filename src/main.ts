@@ -27,6 +27,8 @@ async function bootstrap() {
     .setTitle('Vendabela Backend API')
     .setDescription('API completa para gestão de vendas, produtos, clientes e pedidos')
     .setVersion('1.0')
+    .addServer('http://localhost:3000/app', 'Desenvolvimento Local')
+    .addServer('https://api.vendabela.com/app', 'Produção')
     .addBearerAuth(
       {
         type: 'http',
@@ -45,6 +47,7 @@ async function bootstrap() {
     swaggerOptions: {
       persistAuthorization: true,
     },
+    jsonDocumentUrl: 'app/api/swagger-app.json',
   });
 
   // Configurar timeout e shutdown hooks

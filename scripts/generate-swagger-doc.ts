@@ -63,6 +63,16 @@ async function generateForModule(
         : 'API para o serviço de comércio da plataforma Vendabela'
     )
     .setVersion('1.0')
+    .addServer(
+      moduleName === 'app' ? 'http://localhost:3000/app' : 'http://localhost:3001/app',
+      'Desenvolvimento Local'
+    )
+    .addServer(
+      moduleName === 'app' 
+        ? 'https://vendabela.onrender.com/app' 
+        : 'https://vendabela-commerce.onrender.com/app', // Ajuste se necessário
+      'Produção'
+    )
     .addBearerAuth(
       {
         type: 'http',

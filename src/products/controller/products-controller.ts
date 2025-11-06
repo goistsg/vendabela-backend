@@ -28,8 +28,15 @@ export class ProductsController {
   @ApiResponse({ status: 200, description: 'Lista de produtos' })
   @ApiResponse({ status: 401, description: 'Não autenticado' })
   async findAll(@CurrentUser() user: any) {
-    console.log(user);
     return this.productsService.findAll(user.id);
+  }
+
+  @Get('company/:companyId')
+  @ApiOperation({ summary: 'Listar produtos por empresa', description: 'Retorna todos os produtos de uma empresa' })
+  @ApiResponse({ status: 200, description: 'Lista de produtos' })
+  @ApiResponse({ status: 401, description: 'Não autenticado' })
+  async findAllByCompany(@Param('companyId') companyId: string, @CurrentUser() user: any) {
+    return this.productsService.findAllByCompany(companyId, user.id);
   }
 
   @Get('samples')
