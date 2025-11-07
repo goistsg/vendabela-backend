@@ -9,7 +9,7 @@ import { AdminGuard } from '../../auth/guards/admin.guard';
 @ApiTags('Empresas')
 @Controller('v1/companies')
 @UseGuards(AuthGuard)
-@ApiBearerAuth('JWT-auth')
+@ApiBearerAuth('token')
 export class CompaniesController {
   constructor(private readonly companiesService: CompaniesService) {}
 

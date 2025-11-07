@@ -9,7 +9,7 @@ import { AuthGuard } from '../../auth/guards/auth.guard';
 @ApiTags('Carrinho')
 @Controller('v1/cart')
 @UseGuards(AuthGuard)
-@ApiBearerAuth('JWT-auth')
+@ApiBearerAuth('token')
 export class CartsController {
   constructor(private readonly cartsService: CartsService) {}
 

@@ -8,7 +8,7 @@ import { ProductFavoriteDto } from '../dto/product-favorite.dto';
 @ApiTags('Favoritos')
 @Controller('v1/favorites')
 @UseGuards(AuthGuard)
-@ApiBearerAuth('JWT-auth')
+@ApiBearerAuth('token')
 export class FavoritesController {
   constructor(private readonly favoritesService: FavoritesService) {}
 

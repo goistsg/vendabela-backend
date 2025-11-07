@@ -21,7 +21,7 @@ import { CreateRaffleEntryDto } from '../dto/raffle-entry.dto';
 @ApiTags('Sorteios')
 @Controller('v1/raffles')
 @UseGuards(AuthGuard)
-@ApiBearerAuth('JWT-auth')
+@ApiBearerAuth('token')
 export class RafflesController {
   constructor(private readonly rafflesService: RafflesService) {}
 

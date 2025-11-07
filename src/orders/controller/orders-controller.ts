@@ -10,7 +10,7 @@ import { CartCheckoutDto } from '../dto/cart-checkout.dto';
 @ApiTags('Pedidos')
 @Controller('v1/orders')
 @UseGuards(AuthGuard)
-@ApiBearerAuth('JWT-auth')
+@ApiBearerAuth('token')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 

@@ -10,7 +10,7 @@ import { RemoveAddressService } from '../services/remove-address-service';
 @ApiTags('Endereços')
 @Controller('v1/addresses')
 @UseGuards(AuthGuard)
-@ApiBearerAuth('JWT-auth')
+@ApiBearerAuth('token')
 export class AddressController {
   constructor(
     private readonly addressService: AddressService,

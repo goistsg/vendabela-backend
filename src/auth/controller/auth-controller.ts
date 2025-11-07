@@ -38,7 +38,7 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(AuthGuard)
-  @ApiBearerAuth('JWT-auth')
+  @ApiBearerAuth('token')
   @ApiOperation({ summary: 'Obter perfil do usuário', description: 'Retorna informações do usuário autenticado' })
   @ApiResponse({ status: 200, description: 'Perfil do usuário', schema: {
     type: 'object',
@@ -70,7 +70,7 @@ export class AuthController {
 
   @Post('logout')
   @UseGuards(AuthGuard)
-  @ApiBearerAuth('JWT-auth')
+  @ApiBearerAuth('token')
   @ApiOperation({ summary: 'Logout', description: 'Realiza logout do usuário' })
   @ApiResponse({ status: 200, description: 'Logout realizado com sucesso', schema: {
     type: 'object',

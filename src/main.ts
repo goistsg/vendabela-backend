@@ -27,18 +27,18 @@ async function bootstrap() {
     .setTitle('Vendabela Backend API')
     .setDescription('API completa para gestão de vendas, produtos, clientes e pedidos')
     .setVersion('1.0')
-    .addServer('http://localhost:3000/app', 'Desenvolvimento Local')
-    .addServer('https://api.vendabela.com/app', 'Produção')
+    .addServer('http://localhost:3000', 'Desenvolvimento Local')
+    .addServer('https://vendabela.onrender.com', 'Produção')
     .addBearerAuth(
       {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'JWT',
-        name: 'JWT',
+        name: 'token',
         description: 'Enter JWT token',
         in: 'header',
       },
-      'JWT-auth',
+      'token',
     )
     .build();
 

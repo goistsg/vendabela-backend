@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
+import { CreateUserConsumerDto } from 'users/dto/create-user-consumer.dto';
 
 @Injectable()
 export class UsersService {
@@ -20,6 +21,39 @@ export class UsersService {
         }
       }
     });
+  }
+
+  async createConsumer(dto: CreateUserConsumerDto) {
+    const user = await this.prisma.user.create({
+      data: {
+        name: dto.name,
+        whatsapp: dto.whatsapp
+      } as unknown as CreateUserDto,
+      include: {
+        plan: true, 
+        companies: {
+          include: {
+            company: true,
+            segment: true
+          }
+        }
+      }
+    });
+
+    const segment = await this.prisma.segment.findFirst({ 
+      where: { name: 'Saas' },
+    });
+
+    await this.prisma.userCompany.create({
+      data: {
+        userId: user.id,
+        companyId: dto.companyId,
+        segmentId: segment?.id || '',
+        role: 'CONSUMER'
+      }
+    });
+
+    return user;
   }
 
   async findAll() {   

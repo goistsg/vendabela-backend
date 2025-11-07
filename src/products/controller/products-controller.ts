@@ -9,7 +9,7 @@ import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 @ApiTags('Produtos')
 @Controller('v1/products')
 @UseGuards(AuthGuard)
-@ApiBearerAuth('JWT-auth')
+@ApiBearerAuth('token')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 

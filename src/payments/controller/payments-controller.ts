@@ -20,7 +20,7 @@ import { PaymentStatus } from '@prisma/client';
 @ApiTags('Pagamentos')
 @Controller('v1/payments')
 @UseGuards(AuthGuard)
-@ApiBearerAuth('JWT-auth')
+@ApiBearerAuth('token')
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 

@@ -19,7 +19,7 @@ import { AdminGuard } from '../../auth/guards/admin.guard';
 @ApiTags('Planos')
 @Controller('v1/plains')
 @UseGuards(AuthGuard)
-@ApiBearerAuth('JWT-auth')
+@ApiBearerAuth('token')
 export class PlainsController {
   constructor(private readonly plainsService: PlainsService) {}
 
