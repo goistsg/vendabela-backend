@@ -4,6 +4,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { AuthController } from './controller/auth-controller';
 import { AuthService } from './services/auth.service';
 import { AuthGuard } from './guards/auth.guard';
+import { OptionalAuthGuard } from './guards/optional-auth.guard';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { AuthGuard } from './guards/auth.guard';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, AuthGuard],
-  exports: [AuthService, AuthGuard],
+  providers: [AuthService, AuthGuard, OptionalAuthGuard],
+  exports: [AuthService, AuthGuard, OptionalAuthGuard],
 })
 export class AuthModule {}

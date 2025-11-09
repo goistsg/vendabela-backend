@@ -14,6 +14,7 @@ import { PlainsModule } from './plains/plains.module';
 import { CartsModule } from './carts/carts-module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { PaymentsModule } from './payments/payments.module';
+import { StoreModule } from './store/store.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { PaymentsModule } from './payments/payments.module';
     CartsModule,
     FavoritesModule,
     PaymentsModule,
+    StoreModule,
   ],
   exports: [
     PrismaModule,
