@@ -1,14 +1,21 @@
 import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiHeader } from '@nestjs/swagger';
 import { FavoritesService } from '../services/favorites-service';
 import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { ProductFavoriteDto } from '../dto/product-favorite.dto';
+import { CurrentCompany } from '../../store/decorators/current-company.decorator';
 
 @ApiTags('Favoritos')
 @Controller('v1/favorites')
 @UseGuards(AuthGuard)
 @ApiBearerAuth('token')
+@ApiHeader({
+  name: 'company-id',
+  description: 'ID da empresa (UUID)',
+  required: true,
+  example: '91db60be-bad5-4d40-85fb-93d73a5fb966',
+})
 export class FavoritesController {
   constructor(private readonly favoritesService: FavoritesService) {}
 
@@ -36,12 +43,12 @@ export class FavoritesController {
     return { message: 'Favorito removido com sucesso' };
   }
 
-  @Get(':companyId')
-  @ApiOperation({ summary: 'Listar favoritos', description: 'Retorna todos os produtos favoritos do usuário para uma empresa específica' })
-  @ApiParam({ name: 'companyId', description: 'ID da empresa', type: String })
+  @Get()
+  @ApiOperation({ summary: 'Listar favoritos', description: 'Retorna todos os produtos favoritos do usuário para uma empresa específica. O company-id deve ser enviado no header.' })
   @ApiResponse({ status: 200, description: 'Lista de produtos favoritos' })
+  @ApiResponse({ status: 400, description: 'ID da empresa não fornecido no header' })
   @ApiResponse({ status: 401, description: 'Não autenticado' })
-  async findAll(@CurrentUser() user: any, @Param('companyId') companyId: string) {
+  async findAll(@CurrentUser() user: any, @CurrentCompany() companyId: string) {
     return this.favoritesService.findAll(user.id, companyId);
   }
 }
