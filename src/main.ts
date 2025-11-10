@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { getCorsConfig } from './config/cors.config';
 
 async function bootstrap() {
   console.log('🚀 Starting Vendabela Backend...');
@@ -11,6 +12,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: ['error', 'warn', 'log'],
   });
+
+  // Configurar CORS
+  const corsConfig = getCorsConfig();
+  app.enableCors(corsConfig);
 
   app.useGlobalPipes(
     new ValidationPipe({
