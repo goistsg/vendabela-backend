@@ -167,6 +167,7 @@ export class StoreService {
       },
     });
 
+    // Retorna array de strings (nomes das categorias)
     return categories
       .map((item) => item.category)
       .filter((category): category is string => category !== null);
