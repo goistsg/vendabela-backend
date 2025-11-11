@@ -12,16 +12,22 @@ export class AddressService {
   ) {}
 
   create(dto: CreateAddressDto, userId: string) {
+    const includeClause: any = {
+      user: true,
+      orders: true,
+    };
+
+    // Incluir client apenas se clientId estiver presente
+    if (dto.clientId) {
+      includeClause.client = true;
+    }
+
     return this.prisma.address.create({ 
       data: {
         ...dto,
         userId: userId
       },
-      include: {
-        user: true,
-        client: true,
-        orders: true
-      }
+      include: includeClause,
     });
   }
 
@@ -30,7 +36,7 @@ export class AddressService {
       where: { userId },
       include: {
         user: true,
-        client: true,
+        client: true, // Pode ter clientId ou não, então sempre inclui
         orders: true
       }
     });
@@ -52,7 +58,7 @@ export class AddressService {
       where: { userId, clientId: null },
       include: {
         user: true,
-        client: true
+        // Não inclui client pois clientId é null por definição nesta query
       }
     });
   }
@@ -60,11 +66,11 @@ export class AddressService {
   async findOne(id: string, userId: string) {
     const whereClause = { id, userId };
 
-    const address = this.prisma.address.findUnique({ 
+    const address = await this.prisma.address.findUnique({ 
       where: whereClause,
       include: {
         user: true,
-        client: true,
+        client: true, // Pode ter clientId ou não, então sempre inclui
         orders: true
       }
     });
@@ -77,17 +83,28 @@ export class AddressService {
   }
 
   async update(id: string, dto: UpdateAddressDto, userId: string) {
-
     await this.findOne(id, userId);
+
+    // Buscar o endereço atual para verificar se tem clientId
+    const currentAddress = await this.prisma.address.findUnique({
+      where: { id },
+      select: { clientId: true },
+    });
+
+    const includeClause: any = {
+      user: true,
+      orders: true,
+    };
+
+    // Incluir client apenas se o endereço tiver ou receber clientId
+    if (currentAddress?.clientId || dto.clientId) {
+      includeClause.client = true;
+    }
 
     return this.prisma.address.update({
       where: { id },
       data: dto,
-      include: {
-        user: true,
-        client: true,
-        orders: true
-      }
+      include: includeClause,
     });
   }
 
