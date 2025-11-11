@@ -1,5 +1,6 @@
 import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 
 export class CreateAddressDto {
   @ApiProperty({
@@ -106,6 +107,7 @@ export class CreateAddressDto {
     required: false,
   })
   @IsOptional()
+  @Transform(({ value }) => value === '' ? undefined : value) // Transforma string vazia em undefined
   @IsString()
   @IsUUID()
   clientId?: string;

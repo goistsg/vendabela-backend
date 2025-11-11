@@ -11,7 +11,7 @@ export class AddressService {
     private externalApiService: ExternalApiService,
   ) {}
 
-  create(dto: CreateAddressDto, userId: string) {
+  async create(dto: CreateAddressDto, userId: string) {
     const includeClause: any = {
       user: true,
       orders: true,
@@ -22,11 +22,21 @@ export class AddressService {
       includeClause.client = true;
     }
 
+    // Remover clientId do spread e adicionar apenas se estiver presente
+    const { clientId, ...dtoWithoutClientId } = dto;
+    
+    const data: any = {
+      ...dtoWithoutClientId,
+      userId: userId,
+    };
+
+    // Adicionar clientId apenas se estiver presente e não for string vazia
+    if (clientId && clientId.trim() !== '') {
+      data.clientId = clientId;
+    }
+
     return this.prisma.address.create({ 
-      data: {
-        ...dto,
-        userId: userId
-      },
+      data,
       include: includeClause,
     });
   }
@@ -96,14 +106,32 @@ export class AddressService {
       orders: true,
     };
 
+    // Remover clientId do spread e tratar separadamente
+    const { clientId, ...dtoWithoutClientId } = dto;
+    
+    const data: any = {
+      ...dtoWithoutClientId,
+    };
+
+    // Se clientId foi fornecido e não é vazio, usar o valor
+    // Se foi fornecido como string vazia ou undefined, setar como null para remover a relação
+    if (clientId !== undefined) {
+      if (clientId && clientId.trim() !== '') {
+        data.clientId = clientId;
+      } else {
+        data.clientId = null; // Remove a relação se foi passado vazio
+      }
+    }
+    // Se clientId não foi fornecido no DTO, não inclui no data (mantém o valor atual)
+
     // Incluir client apenas se o endereço tiver ou receber clientId
-    if (currentAddress?.clientId || dto.clientId) {
+    if (currentAddress?.clientId || data.clientId) {
       includeClause.client = true;
     }
 
     return this.prisma.address.update({
       where: { id },
-      data: dto,
+      data,
       include: includeClause,
     });
   }
