@@ -24,10 +24,18 @@ export class UsersService {
   }
 
   async createConsumer(dto: CreateUserConsumerDto) {
+    const plan = await this.prisma.plan.findFirst({ 
+      where: { name: 'CONSUMER' },
+    });
+    if (!plan) {
+      throw new NotFoundException('Plano não encontrado');
+    }
+
     const user = await this.prisma.user.create({
       data: {
         name: dto.name,
-        whatsapp: dto.whatsapp
+        whatsapp: dto.whatsapp,
+        planId: plan.id,
       } as unknown as CreateUserDto,
       include: {
         plan: true, 
