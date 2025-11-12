@@ -2,11 +2,15 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { AddToCartDto } from '../dto/add-to-cart.dto';
 import { UpdateCartItemDto } from '../dto/update-cart-item.dto';
 import { PrismaService } from '../../prisma/prisma.service';
+import { CalculationService } from '../../shared/services/calculation-service';
 import { Cart, Prisma } from '@prisma/client';
 
 @Injectable()
 export class CartsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private calculationService: CalculationService,
+  ) {}
 
   async getCart(userId: string, companyId: string) {
     if (!companyId) {
@@ -45,6 +49,32 @@ export class CartsService {
     });
   }
 
+  /**
+   * Atualiza os valores totais do carrinho automaticamente
+   */
+  private async updateCartTotals(cartId: string) {
+    const cart = await this.prisma.cart.findUnique({
+      where: { id: cartId },
+      include: { items: true }
+    });
+
+    if (!cart) {
+      return;
+    }
+
+    const subtotal = this.calculationService.calculateSubtotal(cart.items);
+    const deliveryFee = cart.deliveryFee || 0;
+    const discountValue = cart.discountValue || 0;
+    const totalAmount = subtotal + deliveryFee - discountValue;
+
+    await this.prisma.cart.update({
+      where: { id: cartId },
+      data: {
+        totalAmount
+      }
+    });
+  }
+
   async addToCart(userId: string, companyId: string, addToCartDto: AddToCartDto) {
     // Verificar se o produto existe
     const product = await this.prisma.product.findUnique({
@@ -76,9 +106,10 @@ export class CartsService {
       }
     });
 
+    let result;
     if (existingItem) {
       // Atualizar quantidade
-      return this.prisma.cartItem.update({
+      result = await this.prisma.cartItem.update({
         where: { id: existingItem.id },
         data: {
           quantity: existingItem.quantity + addToCartDto.quantity
@@ -89,7 +120,7 @@ export class CartsService {
       });
     } else {
       // Adicionar novo item
-      return this.prisma.cartItem.create({
+      result = await this.prisma.cartItem.create({
         data: {
           cartId: cart.id,
           productId: addToCartDto.productId,
@@ -101,6 +132,11 @@ export class CartsService {
         }
       });
     }
+
+    // Atualizar os totais do carrinho automaticamente
+    await this.updateCartTotals(cart.id);
+
+    return result;
   }
 
   async updateCartItem(userId: string, companyId: string, itemId: string, updateCartItemDto: UpdateCartItemDto) {
@@ -129,7 +165,7 @@ export class CartsService {
       return this.removeFromCart(userId, companyId, itemId);
     }
 
-    return this.prisma.cartItem.update({
+    const result = await this.prisma.cartItem.update({
       where: { id: itemId },
       data: {
         quantity: updateCartItemDto.quantity
@@ -138,6 +174,11 @@ export class CartsService {
         product: true
       }
     });
+
+    // Atualizar os totais do carrinho automaticamente
+    await this.updateCartTotals(cart.id);
+
+    return result;
   }
 
   async removeFromCart(userId: string, companyId: string, itemId: string) {
@@ -165,6 +206,9 @@ export class CartsService {
       where: { id: itemId }
     });
 
+    // Atualizar os totais do carrinho automaticamente
+    await this.updateCartTotals(cart.id);
+
     return {
       message: 'Item removido do carrinho com sucesso',
       itemId
@@ -185,6 +229,9 @@ export class CartsService {
       where: { cartId: cart.id }
     });
 
+    // Atualizar os totais do carrinho automaticamente (zerando)
+    await this.updateCartTotals(cart.id);
+
     return {
       message: 'Carrinho limpo com sucesso',
       cartId: cart.id
@@ -199,7 +246,7 @@ export class CartsService {
       return { subtotal: 0, total: 0, itemCount: 0 };
     }
 
-    const subtotal = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const subtotal = this.calculationService.calculateSubtotal(cart.items);
     const deliveryFee = cart.deliveryFee || 0;
     const discountValue = cart.discountValue || 0;
     const total = subtotal + deliveryFee - discountValue;

@@ -2,6 +2,7 @@ import { IsArray, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, Va
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { OrderProductDto } from './order-product.dto';
+import { PaymentMethod } from '@prisma/client';
 
 export class CreateOrderDto {
   @ApiProperty({
@@ -53,4 +54,13 @@ export class CreateOrderDto {
   @IsString()
   @IsUUID()
   addressId?: string;
+
+  @ApiProperty({
+    description: 'Método de pagamento',
+    enum: PaymentMethod,
+    example: PaymentMethod.PIX,
+  })
+  @IsEnum(PaymentMethod)
+  @IsNotEmpty()
+  paymentMethod: PaymentMethod;
 }

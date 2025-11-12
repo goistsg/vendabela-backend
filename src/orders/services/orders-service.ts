@@ -1,31 +1,28 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { AddressService } from '../../address/services/address-service';
+import { CalculationService } from '../../shared/services/calculation-service';
+import { PaymentGeneratorService } from '../../shared/services/payment-generator-service';
 import { CreateOrderDto } from '../dto/create-order.dto';
 import { UpdateOrderDto } from '../dto/update-order.dto';
 import { CartCheckoutDto } from 'orders/dto/cart-checkout.dto';
-import { Cart, CartItem } from '@prisma/client';
+import { Cart, CartItem, PaymentMethod, PaymentStatus } from '@prisma/client';
 
 @Injectable()
 export class OrdersService {
   constructor(
     private prisma: PrismaService,
-    private addressService: AddressService,
+    private calculationService: CalculationService,
+    private paymentGeneratorService: PaymentGeneratorService,
   ) {}
-
-  async calculateTotal(products: {price: number, quantity: number}[], discount: number = 0) {
-    const total = products.reduce((acc, p) => acc + p.price * p.quantity, 0) - discount;
-    return total;
-  }
 
   async create(dto: CreateOrderDto, userId?: string) {
     if (!userId) {
       throw new NotFoundException(`userId é obrigatório para criar pedidos`);
     }
 
-    const total = await this.calculateTotal(dto.products, dto.discount);
+    const total = this.calculationService.calculateTotal(dto.products, dto.discount);
 
-    return this.prisma.order.create({
+    const order = await this.prisma.order.create({
       data: {
         userId: userId,
         clientId: dto.clientId,
@@ -54,9 +51,28 @@ export class OrdersService {
         }
       },
     });
+
+    // Gerar dados de pagamento (QR Code e PIX Payload se for PIX)
+    const paymentData = this.paymentGeneratorService.generatePaymentData(
+      dto.paymentMethod,
+      order.id,
+      total
+    );
+
+    const payment = await this.prisma.payment.create({
+      data: {
+        orderId: order.id,
+        method: dto.paymentMethod,
+        qrCode: paymentData?.qrCode || null,
+        pixPayload: paymentData?.pixPayload || null,
+        status: PaymentStatus.PENDING,
+      },
+    });
+
+    return { ...order, payments: [payment] };
   }
 
-  async createOrderFromCart(cart: Cart & { items: CartItem[] }, addressNumber: string, userId?: string): Promise<CreateOrderDto> {
+  async createOrderFromCart(cart: Cart & { items: CartItem[] }, addressId: string, paymentMethod: PaymentMethod, userId?: string): Promise<CreateOrderDto> {
     if (!userId) {
       throw new NotFoundException(`userId é obrigatório para criar pedidos`);
     }
@@ -66,19 +82,17 @@ export class OrdersService {
       quantity: item.quantity,
       price: item.price,
     }));
-    const total = await this.calculateTotal(products, cart.discountValue);
-
-    // Usa o serviço de endereço para buscar ou criar o endereço
-    const address = await this.addressService.findOrCreateByZipCode(cart.cep, addressNumber, userId);
+    const total = this.calculationService.calculateTotal(products, cart.discountValue);
 
     return {
       userId: userId,
       clientId: cart.userId,
       companyId: cart.companyId,
-      addressId: address.id,
+      addressId: addressId,
       discount: cart.discountValue,
       total: total,
       products: products,
+      paymentMethod: paymentMethod,
     } as CreateOrderDto;
   }
 
@@ -98,9 +112,21 @@ export class OrdersService {
       throw new NotFoundException(`Carrinho com ID ${dto.cartId} não encontrado`);
     }
 
-    const orderDto = await this.createOrderFromCart(cart, dto.addressNumber, userId);
+    const orderDto = await this.createOrderFromCart(cart, dto.addressId, dto.paymentMethod, userId);
 
-    return this.create(orderDto, userId);
+    const order = await this.create(orderDto, userId);
+
+    if (order) {
+      try {
+        await this.prisma.cart.delete({
+          where: { id: cart.id },
+        });
+      } catch (error) {
+        throw new InternalServerErrorException(`Erro ao deletar carrinho: ${error.message}`);
+      }
+    }
+
+    return order;
   }
 
   async findAll(userId?: string) {   
@@ -156,7 +182,7 @@ export class OrdersService {
     // Verificar se o pedido existe e se o usuário tem permissão
     const order = await this.findOne(id, userId);
 
-    const total = await this.calculateTotal(dto.products || order.products, dto.discount || order.discount);
+    const total = this.calculationService.calculateTotal(dto.products || order.products, dto.discount || order.discount);
 
     return this.prisma.order.update({
       where: { id },
