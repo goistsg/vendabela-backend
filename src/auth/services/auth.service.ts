@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../../prisma/prisma.service';
+import { TwilioSmsService } from './twilio-sms.service';
 import { LoginDto } from '../dto/login.dto';
 import { VerifyOtpDto } from '../dto/verify-otp.dto';
 
@@ -9,6 +10,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private twilioSmsService: TwilioSmsService,
   ) {}
 
   async login(dto: LoginDto) {
@@ -38,13 +40,19 @@ export class AuthService {
       data: { otpCode }
     });
 
-    // TODO: Implementar envio de OTP via WhatsApp/SMS
-    console.log(`OTP para ${user.whatsapp}: ${otpCode}`);
+    // Enviar OTP via SMS usando Twilio
+    const smsSent = await this.twilioSmsService.sendOtpSms(user.whatsapp, otpCode);
+
+    if (!smsSent && process.env.NODE_ENV === 'production') {
+      // Em produção, se o SMS falhar, ainda permitir (mas logar o erro)
+      console.error(`Falha ao enviar SMS para ${user.whatsapp}`);
+    }
 
     return {
       message: 'OTP enviado com sucesso',
       whatsapp: user.whatsapp,
-      // Em produção, não retornar o OTP
+      smsSent: smsSent,
+      // Em desenvolvimento, retornar o OTP para facilitar testes
       otpCode: process.env.NODE_ENV === 'development' ? otpCode : undefined
     };
   }

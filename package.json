@@ -1,6 +1,6 @@
 {
   "name": "@vendabela",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "",
   "author": "",
   "private": true,
@@ -54,7 +54,8 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "twilio": "^5.10.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

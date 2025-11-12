@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PrismaModule } from '../prisma/prisma.module';
 import { AuthController } from './controller/auth-controller';
 import { AuthService } from './services/auth.service';
+import { TwilioSmsService } from './services/twilio-sms.service';
 import { AuthGuard } from './guards/auth.guard';
 import { OptionalAuthGuard } from './guards/optional-auth.guard';
 
@@ -15,7 +16,7 @@ import { OptionalAuthGuard } from './guards/optional-auth.guard';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, AuthGuard, OptionalAuthGuard],
-  exports: [AuthService, AuthGuard, OptionalAuthGuard],
+  providers: [AuthService, TwilioSmsService, AuthGuard, OptionalAuthGuard],
+  exports: [AuthService, TwilioSmsService, AuthGuard, OptionalAuthGuard],
 })
 export class AuthModule {}

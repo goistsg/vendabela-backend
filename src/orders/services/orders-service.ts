@@ -148,6 +148,12 @@ export class OrdersService {
 
     if (order) {
       try {
+        // Deletar os itens do carrinho primeiro (devido à constraint de foreign key)
+        await this.prisma.cartItem.deleteMany({
+          where: { cartId: cart.id },
+        });
+        
+        // Depois deletar o carrinho
         await this.prisma.cart.delete({
           where: { id: cart.id },
         });
