@@ -24,15 +24,25 @@ export class OrdersService {
 
     const order = await this.prisma.order.create({
       data: {
-        userId: userId,
-        clientId: dto.clientId,
-        companyId: dto.companyId,
-        addressId: dto.addressId,
+        user: {
+          connect: { id: userId }
+        },
+        client: {
+          connect: { id: dto.clientId }
+        },
+        company: {
+          connect: { id: dto.companyId }
+        },
+        address: dto.addressId ? {
+          connect: { id: dto.addressId }
+        } : undefined,
         discount: dto.discount,
         total: total,
         products: {
           create: dto.products.map((p) => ({
-            productId: p.productId,
+            product: {
+              connect: { id: p.productId }
+            },
             quantity: p.quantity,
             price: p.price,
           })),
