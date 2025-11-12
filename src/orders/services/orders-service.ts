@@ -72,7 +72,7 @@ export class OrdersService {
     return { ...order, payments: [payment] };
   }
 
-  async createOrderFromCart(cart: Cart & { items: CartItem[] }, addressId: string, paymentMethod: PaymentMethod, userId?: string): Promise<CreateOrderDto> {
+  async createOrderDtoFromCart(cart: Cart & { items: CartItem[] }, addressId: string, paymentMethod: PaymentMethod, userId?: string, userName?: string): Promise<CreateOrderDto> {
     if (!userId) {
       throw new NotFoundException(`userId é obrigatório para criar pedidos`);
     }
@@ -84,9 +84,22 @@ export class OrdersService {
     }));
     const total = this.calculationService.calculateTotal(products, cart.discountValue);
 
+    let client = await this.prisma.client.findFirst({
+      where: { userId: userId },
+    });
+    if (!client) {
+      client = await this.prisma.client.create({
+        data: {
+          userId: userId,
+          name: userName,
+          companyId: cart.companyId,
+        },
+      });
+    }
+
     return {
       userId: userId,
-      clientId: cart.userId,
+      clientId: client.id,
       companyId: cart.companyId,
       addressId: addressId,
       discount: cart.discountValue,
@@ -96,7 +109,7 @@ export class OrdersService {
     } as CreateOrderDto;
   }
 
-  async cartCheckout(dto: CartCheckoutDto, userId?: string) {
+  async cartCheckout(dto: CartCheckoutDto, userId?: string, userName?: string) {
     if (!userId) {
       throw new NotFoundException(`userId é obrigatório para criar pedidos`);
     }
@@ -112,7 +125,7 @@ export class OrdersService {
       throw new NotFoundException(`Carrinho com ID ${dto.cartId} não encontrado`);
     }
 
-    const orderDto = await this.createOrderFromCart(cart, dto.addressId, dto.paymentMethod, userId);
+    const orderDto = await this.createOrderDtoFromCart(cart, dto.addressId, dto.paymentMethod, userId, userName);
 
     const order = await this.create(orderDto, userId);
 
