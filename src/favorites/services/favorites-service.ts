@@ -7,10 +7,10 @@ import { FavoriteResponseDto } from '../dto/favorite-response.dto';
 export class FavoritesService {
   constructor(private prisma: PrismaService) {}
 
-  async create(userId: string, dto: ProductFavoriteDto): Promise<FavoriteResponseDto> {
+  async create(userId: string, companyId: string, dto: ProductFavoriteDto): Promise<FavoriteResponseDto> {
     // Verificar se o produto existe
     const product = await this.prisma.product.findUnique({
-      where: { id: dto.productId },
+      where: { id: dto.productId, companyId: companyId },
       include: { company: true }
     });
 
@@ -36,7 +36,7 @@ export class FavoritesService {
       data: {
         userId,
         productId: dto.productId,
-        companyId: product.companyId
+        companyId: companyId
       },
       include: {
         product: true,

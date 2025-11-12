@@ -19,21 +19,19 @@ import { CurrentCompany } from '../../store/decorators/current-company.decorator
 export class FavoritesController {
   constructor(private readonly favoritesService: FavoritesService) {}
 
-  @Post(':productId')
+  @Post()
   @ApiOperation({ summary: 'Adicionar favorito', description: 'Adiciona um produto aos favoritos do usuário' })
-  @ApiParam({ name: 'productId', description: 'ID do produto', type: String })
   @ApiResponse({ status: 201, description: 'Produto adicionado aos favoritos' })
   @ApiResponse({ status: 400, description: 'Produto já está nos favoritos' })
   @ApiResponse({ status: 404, description: 'Produto não encontrado' })
   @ApiResponse({ status: 401, description: 'Não autenticado' })
   @ApiBody({ type: ProductFavoriteDto })
-  async create(@Body() dto: ProductFavoriteDto, @CurrentUser() user: any) {
-    return this.favoritesService.create(user.id, dto);
+  async create(@Body() dto: ProductFavoriteDto, @CurrentUser() user: any, @CurrentCompany() companyId: string) {
+    return this.favoritesService.create(user.id, companyId, dto);
   }
 
-  @Delete(':productId')
+  @Delete()
   @ApiOperation({ summary: 'Remover favorito', description: 'Remove um produto dos favoritos do usuário' })
-  @ApiParam({ name: 'productId', description: 'ID do produto', type: String })
   @ApiResponse({ status: 200, description: 'Favorito removido com sucesso' })
   @ApiResponse({ status: 404, description: 'Favorito não encontrado' })
   @ApiResponse({ status: 401, description: 'Não autenticado' })
