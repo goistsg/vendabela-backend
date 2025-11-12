@@ -36,7 +36,7 @@ export class OrdersService {
         address: dto.addressId ? {
           connect: { id: dto.addressId }
         } : undefined,
-        discount: dto.discount,
+        discount: dto.discount || 0,
         total: total,
         products: {
           create: dto.products.map((p) => ({
@@ -137,7 +137,7 @@ export class OrdersService {
 
     const orderDto = await this.createOrderDtoFromCart(
       cart.items,
-      cart.discountValue,
+      cart.discountValue || 0,
       dto.addressId,
       dto.paymentMethod,
       userId,
