@@ -1,11 +1,12 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiHeader } from '@nestjs/swagger';
 import { OrdersService } from '../services/orders-service';
 import { CreateOrderDto } from '../dto/create-order.dto';
 import { AuthGuard } from '../../auth/guards/auth.guard';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { UpdateOrderDto } from '../dto/update-order.dto';
 import { CartCheckoutDto } from '../dto/cart-checkout.dto';
+import { CurrentCompany } from 'store/decorators/current-company.decorator';
 
 @ApiTags('Pedidos')
 @Controller('v1/orders')
@@ -30,8 +31,14 @@ export class OrdersController {
   @ApiResponse({ status: 400, description: 'Carrinho inválido ou vazio' })
   @ApiResponse({ status: 401, description: 'Não autenticado' })
   @ApiBody({ type: CartCheckoutDto })
-  async checkout(@Body() dto: CartCheckoutDto, @CurrentUser() user: any) {
-    return this.ordersService.cartCheckout(dto, user.id);
+  @ApiHeader({
+    name: 'company-id',
+    description: 'ID da empresa (UUID)',
+    required: true,
+    example: '91db60be-bad5-4d40-85fb-93d73a5fb966',
+  })
+  async checkout(@Body() dto: CartCheckoutDto, @CurrentUser() user: any, @CurrentCompany() companyId: string) {
+    return this.ordersService.cartCheckout(dto, user.id, companyId);
   }
 
   @Get()

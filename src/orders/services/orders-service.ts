@@ -72,27 +72,27 @@ export class OrdersService {
     return { ...order, payments: [payment] };
   }
 
-  async createOrderDtoFromCart(cart: Cart & { items: CartItem[] }, addressId: string, paymentMethod: PaymentMethod, userId?: string, userName?: string): Promise<CreateOrderDto> {
+  async createOrderDtoFromCart(cartItems: CartItem[], discountValue: number, addressId: string, paymentMethod: PaymentMethod, userId?: string, companyId?: string): Promise<CreateOrderDto> {
     if (!userId) {
       throw new NotFoundException(`userId é obrigatório para criar pedidos`);
     }
 
-    const products = cart.items.map((item) => ({
+    const products = cartItems.map((item) => ({
       productId: item.productId,
       quantity: item.quantity,
       price: item.price,
     }));
-    const total = this.calculationService.calculateTotal(products, cart.discountValue);
+    const total = this.calculationService.calculateTotal(products, discountValue);
 
     let client = await this.prisma.client.findFirst({
-      where: { userId: userId },
+      where: { userId: userId, companyId: companyId },
     });
     if (!client) {
       client = await this.prisma.client.create({
         data: {
           userId: userId,
-          name: userName,
-          companyId: cart.companyId,
+          name: 'CONSUMIDOR',
+          companyId: companyId,
         },
       });
     }
@@ -100,16 +100,16 @@ export class OrdersService {
     return {
       userId: userId,
       clientId: client.id,
-      companyId: cart.companyId,
+      companyId: companyId,
       addressId: addressId,
-      discount: cart.discountValue,
+      discount: discountValue,
       total: total,
       products: products,
       paymentMethod: paymentMethod,
     } as CreateOrderDto;
   }
 
-  async cartCheckout(dto: CartCheckoutDto, userId?: string, userName?: string) {
+  async cartCheckout(dto: CartCheckoutDto, userId?: string, companyId?: string) {
     if (!userId) {
       throw new NotFoundException(`userId é obrigatório para criar pedidos`);
     }
@@ -125,7 +125,14 @@ export class OrdersService {
       throw new NotFoundException(`Carrinho com ID ${dto.cartId} não encontrado`);
     }
 
-    const orderDto = await this.createOrderDtoFromCart(cart, dto.addressId, dto.paymentMethod, userId, userName);
+    const orderDto = await this.createOrderDtoFromCart(
+      cart.items,
+      cart.discountValue,
+      dto.addressId,
+      dto.paymentMethod,
+      userId,
+      companyId
+    );
 
     const order = await this.create(orderDto, userId);
 
