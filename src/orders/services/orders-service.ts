@@ -62,6 +62,18 @@ export class OrdersService {
       },
     });
 
+    // Decrementar a quantidade de produtos em estoque
+    for (const item of order.products) {
+      await this.prisma.product.update({
+        where: { id: item.productId },
+        data: {
+          stock: {
+            decrement: item.quantity,
+          },
+        },
+      });
+    }
+
     // Gerar dados de pagamento (QR Code e PIX Payload se for PIX)
     const paymentData = this.paymentGeneratorService.generatePaymentData(
       dto.paymentMethod,

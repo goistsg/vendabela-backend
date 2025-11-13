@@ -35,10 +35,19 @@ export class AddressService {
       data.clientId = clientId;
     }
 
-    return this.prisma.address.create({ 
+    const address = await this.prisma.address.create({ 
       data,
       include: includeClause,
     });
+
+    if (address.isPrimary) {
+      await this.prisma.address.updateMany({
+        where: { userId, isPrimary: true, id: { not: address.id } },
+        data: { isPrimary: false },
+      });
+    }
+
+    return address;
   }
 
   async findAll(userId: string) {

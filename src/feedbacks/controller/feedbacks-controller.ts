@@ -3,7 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { FeedbacksService } from '../services/feedbacks-service';
 import { CreateUserFeedbackDto } from '../dto/create-user-feedback.dto';
 import { CreateTestSessionDto } from '../dto/create-test-session.dto';
-import { AdminGuard } from 'auth/guards/admin.guard';
+import { AdminGuard } from '../../auth/guards/admin.guard';
 
 @ApiTags('Feedbacks')
 @Controller('v1/feedbacks')
