@@ -35,19 +35,28 @@ export class AddressService {
       data.clientId = clientId;
     }
 
-    const address = await this.prisma.address.create({ 
+    if (dto.isPrimary) {
+      await this.updatePrimaryAddressToFalse(userId, clientId);
+    }
+
+    return this.prisma.address.create({ 
       data,
       include: includeClause,
     });
+  }
 
-    if (address.isPrimary) {
+  async updatePrimaryAddressToFalse(userId: string, clientId?: string) {
+    if (clientId && clientId.trim() !== '') {
       await this.prisma.address.updateMany({
-        where: { userId, isPrimary: true, id: { not: address.id } },
+        where: { userId, isPrimary: true, clientId },
+        data: { isPrimary: false },
+      });
+    } else {
+      await this.prisma.address.updateMany({
+        where: { userId, isPrimary: true, clientId: null },
         data: { isPrimary: false },
       });
     }
-
-    return address;
   }
 
   async findAll(userId: string) {
