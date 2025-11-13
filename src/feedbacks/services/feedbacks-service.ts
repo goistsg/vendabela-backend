@@ -32,4 +32,19 @@ export class FeedbacksService {
       },
     });
   }
+
+  async getAllSessionResults() {
+    return await this.prisma.testSession.findMany({
+      include: {
+        feedbacks: {
+          include: {
+            user: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  }
 }
