@@ -184,6 +184,24 @@ export class OrdersService {
     });
   }
 
+  async findAllByCompany(companyId: string) {
+    return this.prisma.order.findMany({
+      where: { companyId },
+      include: { 
+        user: true,
+        client: true,
+        company: true,
+        address: true,
+        products: {
+          include: {
+            product: true
+          }
+        },
+        payments: true
+      },
+    });
+  }
+
   async findOne(id: string, userId?: string) {
     const whereClause: any = { id };
     

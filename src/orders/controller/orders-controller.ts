@@ -7,6 +7,7 @@ import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { UpdateOrderDto } from '../dto/update-order.dto';
 import { CartCheckoutDto } from '../dto/cart-checkout.dto';
 import { CurrentCompany } from 'store/decorators/current-company.decorator';
+import { AdminGuard } from 'auth/guards/admin.guard';
 
 @ApiTags('Pedidos')
 @Controller('v1/orders')
@@ -47,6 +48,21 @@ export class OrdersController {
   @ApiResponse({ status: 401, description: 'Não autenticado' })
   async findAll(@CurrentUser() user: any) {
     return this.ordersService.findAll(user.id);
+  }
+
+  @Get('company')
+  @UseGuards(AdminGuard)
+  @ApiOperation({ summary: 'Listar pedidos da empresa', description: 'Retorna todos os pedidos da empresa' })
+  @ApiResponse({ status: 200, description: 'Lista de pedidos' })
+  @ApiResponse({ status: 401, description: 'Não autenticado' })
+  @ApiHeader({
+    name: 'company-id',
+    description: 'ID da empresa (UUID)',
+    required: true,
+    example: '91db60be-bad5-4d40-85fb-93d73a5fb966',
+  })
+  async findAllByCompany(@CurrentCompany() companyId: string) {
+    return this.ordersService.findAllByCompany(companyId);
   }
 
   @Get(':id')
