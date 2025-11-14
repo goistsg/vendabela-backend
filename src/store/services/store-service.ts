@@ -50,6 +50,7 @@ export class StoreService {
       search?: string;
       page?: number;
       limit?: number;
+      orderBy?: string;
       userId?: string;
     },
   ) {
@@ -75,6 +76,12 @@ export class StoreService {
       ];
     }
 
+    let orderBy: any = { createdAt: 'desc' };
+    if (options?.orderBy) {
+      const [field, direction] = options.orderBy.split(':');
+      orderBy = { [field]: direction === 'asc' ? 'asc' : 'desc' };
+    }
+
     const [products, total] = await Promise.all([
       this.prisma.product.findMany({
         where: whereClause,
@@ -91,7 +98,7 @@ export class StoreService {
           createdAt: true,
           updatedAt: true,
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: orderBy,
         skip,
         take: limit,
       }),

@@ -1,4 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsArray } from 'class-validator';
+import { IsString } from 'class-validator';
 
 /**
  * DTO de resposta para produto da loja
@@ -37,6 +39,15 @@ export class StoreProductDto {
     nullable: true,
   })
   description: string | null;
+
+  @ApiProperty({
+    description: 'Ingredientes do produto',
+    example: ['Ingrediente 1', 'Ingrediente 2'],
+    type: [String],
+  })
+  @IsArray()
+  @IsString({ each: true })
+  ingredients: string[];
 
   @ApiProperty({
     description: 'Array de URLs das imagens do produto',

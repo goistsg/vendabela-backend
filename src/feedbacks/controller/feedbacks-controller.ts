@@ -36,7 +36,6 @@ export class FeedbacksController {
   @ApiResponse({ status: 200, description: 'Resultados das sessões de teste' })
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
   @ApiResponse({ status: 401, description: 'Não autenticado' })
-  @ApiResponse({ status: 403, description: 'Acesso negado - apenas Admin' })
   async getAllSessionResults(@CurrentUser() user: any) {
     return this.feedbacksService.getAllSessionResults();
   }

@@ -40,6 +40,17 @@ export class UpdateProductDto {
   description?: string;
 
   @ApiProperty({
+    description: 'Ingredientes do produto',
+    example: ['Ingrediente 1', 'Ingrediente 2'],
+    type: [String],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  ingredients?: string[];
+
+  @ApiProperty({
     description: 'URLs das imagens do produto',
     example: ['https://example.com/image1.jpg'],
     type: [String],

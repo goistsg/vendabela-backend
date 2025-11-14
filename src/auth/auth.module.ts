@@ -5,6 +5,7 @@ import { AuthController } from './controller/auth-controller';
 import { AuthService } from './services/auth.service';
 import { AuthGuard } from './guards/auth.guard';
 import { OptionalAuthGuard } from './guards/optional-auth.guard';
+import { AdminGuard } from './guards/admin.guard';
 import { SharedModule } from 'shared/shared.module';
 
 @Module({
@@ -17,7 +18,7 @@ import { SharedModule } from 'shared/shared.module';
     SharedModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, AuthGuard, OptionalAuthGuard],
-  exports: [AuthService, AuthGuard, OptionalAuthGuard],
+  providers: [AuthService, AuthGuard, OptionalAuthGuard, AdminGuard],
+  exports: [AuthService, AuthGuard, OptionalAuthGuard, AdminGuard],
 })
 export class AuthModule {}
