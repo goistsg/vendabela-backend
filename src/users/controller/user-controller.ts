@@ -28,13 +28,15 @@ import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 
 @ApiTags('Usuários')
 @Controller('v1/users')
+@UseGuards(AuthGuard)
+@ApiBearerAuth('token')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   // ====== REGISTRO (SEM AUTENTICAÇÃO) ======
 
   @Post()
-  @UseGuards(OptionalAuthGuard)
+  @UseGuards(AdminGuard)
   @ApiOperation({
     summary: 'Criar usuário / Registrar-se',
     description:
@@ -53,8 +55,7 @@ export class UsersController {
   // ====== GERENCIAMENTO (REQUER AUTENTICAÇÃO) ======
 
   @Get()
-  @UseGuards(AuthGuard, AdminGuard)
-  @ApiBearerAuth('token')
+  @UseGuards(AdminGuard)
   @ApiOperation({
     summary: 'Listar todos os usuários',
     description: 'Retorna lista completa de usuários (apenas Admin)',
@@ -67,8 +68,6 @@ export class UsersController {
   }
 
   @Get(':id')
-  @UseGuards(AuthGuard)
-  @ApiBearerAuth('token')
   @ApiOperation({
     summary: 'Obter usuário por ID',
     description:
@@ -92,8 +91,6 @@ export class UsersController {
   }
 
   @Patch(':id')
-  @UseGuards(AuthGuard)
-  @ApiBearerAuth('token')
   @ApiOperation({
     summary: 'Atualizar usuário',
     description:
@@ -121,7 +118,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard, AdminGuard)
+  @UseGuards(AdminGuard)
   @ApiBearerAuth('token')
   @ApiOperation({
     summary: 'Deletar usuário',
@@ -139,8 +136,6 @@ export class UsersController {
   // ====== TROCAR SENHA (AUTENTICADO) ======
 
   @Patch(':id/password')
-  @UseGuards(AuthGuard)
-  @ApiBearerAuth('token')
   @ApiOperation({
     summary: 'Trocar senha',
     description:

@@ -1,9 +1,10 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards, ForbiddenException, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiHeader } from '@nestjs/swagger';
 import { FeedbacksService } from '../services/feedbacks-service';
 import { CreateUserFeedbackDto } from '../dto/create-user-feedback.dto';
 import { CreateTestSessionDto } from '../dto/create-test-session.dto';
 import { AdminGuard } from '../../auth/guards/admin.guard';
+import { CurrentUser } from 'auth/decorators/current-user.decorator';
 
 @ApiTags('Feedbacks')
 @Controller('v1/feedbacks')
@@ -30,12 +31,13 @@ export class FeedbacksController {
 
   @Get('session/results')
   @UseGuards(AdminGuard)
+  @ApiBearerAuth('token')
   @ApiOperation({ summary: 'Obter todos os resultados das sessões de teste', description: 'Retorna todos os resultados das sessões de teste' })
   @ApiResponse({ status: 200, description: 'Resultados das sessões de teste' })
   @ApiResponse({ status: 400, description: 'Dados inválidos' })
   @ApiResponse({ status: 401, description: 'Não autenticado' })
   @ApiResponse({ status: 403, description: 'Acesso negado - apenas Admin' })
-  async getAllSessionResults() {
+  async getAllSessionResults(@CurrentUser() user: any) {
     return this.feedbacksService.getAllSessionResults();
   }
 }
