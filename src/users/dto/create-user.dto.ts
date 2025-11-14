@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString, Matches, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, Matches, IsEmail, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUserDto {
@@ -11,29 +11,32 @@ export class CreateUserDto {
   name: string;
 
   @ApiProperty({
-    description: 'Número de WhatsApp (formato E.164)',
-    example: '+5511999999999',
+    description: 'Email do usuário',
+    example: 'joao@exemplo.com',
   })
-  @IsString()
-  @Matches(/^\+?[1-9]\d{1,14}$/, { message: 'WhatsApp deve estar no formato E.164 (ex: +5511999999999)' })
-  whatsapp: string;
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
 
   @ApiProperty({
-    description: 'Código OTP (opcional, geralmente gerado automaticamente)',
-    example: '123456',
+    description: 'Senha do usuário (mínimo 8 caracteres, deve conter maiúscula, minúscula e número/caractere especial)',
+    example: 'Senha@123',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8, { message: 'Senha deve ter no mínimo 8 caracteres' })
+  @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
+    message: 'Senha deve conter maiúscula, minúscula e número/caractere especial',
+  })
+  password: string;
+
+  @ApiProperty({
+    description: 'Número de WhatsApp (formato E.164)',
+    example: '+5511999999999',
     required: false,
   })
   @IsOptional()
   @IsString()
-  otpCode?: string;
-
-  @ApiProperty({
-    description: 'ID do plano do usuário',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-    format: 'uuid',
-  })
-  @IsString()
-  @IsUUID()
-  @IsNotEmpty()
-  planId: string;
+  @Matches(/^\+?[1-9]\d{1,14}$/, { message: 'WhatsApp deve estar no formato E.164 (ex: +5511999999999)' })
+  whatsapp?: string;
 }

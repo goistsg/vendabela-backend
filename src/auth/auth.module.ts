@@ -3,20 +3,21 @@ import { JwtModule } from '@nestjs/jwt';
 import { PrismaModule } from '../prisma/prisma.module';
 import { AuthController } from './controller/auth-controller';
 import { AuthService } from './services/auth.service';
-import { TwilioSmsService } from './services/twilio-sms.service';
 import { AuthGuard } from './guards/auth.guard';
 import { OptionalAuthGuard } from './guards/optional-auth.guard';
+import { SharedModule } from 'shared/shared.module';
 
 @Module({
   imports: [
     PrismaModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '24h' },
+      secret: process.env.JWT_SECRET || 'default-secret-key',
+      signOptions: { expiresIn: '7d' },
     }),
+    SharedModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, TwilioSmsService, AuthGuard, OptionalAuthGuard],
-  exports: [AuthService, TwilioSmsService, AuthGuard, OptionalAuthGuard],
+  providers: [AuthService, AuthGuard, OptionalAuthGuard],
+  exports: [AuthService, AuthGuard, OptionalAuthGuard],
 })
 export class AuthModule {}

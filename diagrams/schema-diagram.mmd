@@ -1,0 +1,550 @@
+classDiagram
+    %% ========================================
+    %% USUÁRIOS E AUTENTICAÇÃO
+    %% ========================================
+    
+    class User {
+        +String id
+        +String name
+        +String? whatsapp
+        +String? otpCode
+        +String? email
+        +String? password
+        +Boolean emailVerified
+        +DateTime? emailVerifiedAt
+        +AuthProvider authProvider
+        +String? totpSecret
+        +Boolean totpEnabled
+        +Array totpBackupCodes
+        +DateTime? lastLoginAt
+        +DateTime? passwordChangedAt
+        +String? resetPasswordToken
+        +DateTime? resetPasswordExpires
+        +Boolean isActive
+        +DateTime createdAt
+        +DateTime updatedAt
+        +String planId
+    }
+
+    class AuthProvider {
+        <<enumeration>>
+        EMAIL
+        GOOGLE
+        FACEBOOK
+        MAGIC_LINK
+        PHONE
+        TOTP
+    }
+
+    class Plan {
+        +String id
+        +String name
+        +String? description
+        +Float price
+        +Json? features
+        +Boolean isInternal
+        +DateTime createdAt
+        +DateTime updatedAt
+    }
+
+    %% ========================================
+    %% EMPRESA E SEGMENTOS
+    %% ========================================
+
+    class Company {
+        +String id
+        +String name
+        +String? identifier
+        +Boolean isPrivate
+        +String? emailFrom
+        +String? emailFromName
+        +String? emailReplyTo
+        +String? appUrl
+        +DateTime createdAt
+        +DateTime updatedAt
+    }
+
+    class Segment {
+        +String id
+        +String name
+        +DateTime createdAt
+        +DateTime updatedAt
+    }
+
+    class UserCompany {
+        +String id
+        +String userId
+        +String companyId
+        +String segmentId
+        +CompanyRole role
+        +DateTime createdAt
+    }
+
+    class CompanyRole {
+        <<enumeration>>
+        CONSUMER
+        CONSULTANT
+        DIRECTOR
+        COMPANY_ADMIN
+        STORE
+    }
+
+    %% ========================================
+    %% CLIENTES E ENDEREÇOS
+    %% ========================================
+
+    class Client {
+        +String id
+        +String name
+        +String? phone
+        +String? email
+        +DateTime? birthday
+        +String? origin
+        +Int leadScore
+        +DateTime createdAt
+        +DateTime updatedAt
+        +String userId
+        +String companyId
+    }
+
+    class Address {
+        +String id
+        +String? name
+        +String street
+        +String? number
+        +String? complement
+        +String? district
+        +String city
+        +String state
+        +String zipCode
+        +Float? latitude
+        +Float? longitude
+        +Boolean isPrimary
+        +DateTime createdAt
+        +DateTime updatedAt
+        +String? userId
+        +String? clientId
+    }
+
+    %% ========================================
+    %% PRODUTOS E AVALIAÇÕES
+    %% ========================================
+
+    class Product {
+        +String id
+        +String name
+        +String? category
+        +String? sku
+        +String? description
+        +Array imageUrls
+        +Array recommendations
+        +String? usageNotes
+        +Float costPrice
+        +Float lastPrice
+        +Float salePrice
+        +Int stock
+        +Boolean hasSample
+        +Int? sampleQuantity
+        +Array ingredients
+        +Array allergens
+        +String? cautions
+        +Float? averageRating
+        +Int reviewCount
+        +DateTime createdAt
+        +DateTime updatedAt
+        +String companyId
+        +String userId
+    }
+
+    class ProductReview {
+        +String id
+        +String productId
+        +String userId
+        +String? orderId
+        +Int rating
+        +String? title
+        +String comment
+        +Array images
+        +Boolean isVerifiedPurchase
+        +ReviewStatus status
+        +Int helpfulCount
+        +Int notHelpfulCount
+        +String? sellerResponse
+        +DateTime? sellerRespondedAt
+        +String? sellerResponderId
+        +DateTime? editedAt
+        +Int reportedCount
+        +Array reportedReasons
+        +DateTime createdAt
+        +DateTime updatedAt
+    }
+
+    class ReviewHelpfulVote {
+        +String id
+        +String reviewId
+        +String userId
+        +Boolean isHelpful
+        +DateTime createdAt
+    }
+
+    class ReviewStatus {
+        <<enumeration>>
+        PENDING
+        APPROVED
+        REJECTED
+        HIDDEN
+        FLAGGED
+    }
+
+    %% ========================================
+    %% PEDIDOS E PAGAMENTOS
+    %% ========================================
+
+    class Order {
+        +String id
+        +OrderStatus status
+        +Float total
+        +Float discount
+        +DateTime createdAt
+        +DateTime updatedAt
+        +String userId
+        +String clientId
+        +String companyId
+        +String? addressId
+    }
+
+    class OrderProduct {
+        +String id
+        +String orderId
+        +String productId
+        +Int quantity
+        +Float price
+    }
+
+    class OrderStatus {
+        <<enumeration>>
+        OPEN
+        PAID
+        SEPARATING
+        DELIVERED
+        CANCELED
+    }
+
+    class Payment {
+        +String id
+        +String orderId
+        +PaymentMethod method
+        +String? qrCode
+        +String? pixPayload
+        +PaymentStatus status
+        +DateTime createdAt
+    }
+
+    class PaymentMethod {
+        <<enumeration>>
+        CASH
+        PIX
+        CREDIT_CARD
+        DEBIT_CARD
+        BILL
+    }
+
+    class PaymentStatus {
+        <<enumeration>>
+        PENDING
+        COMPLETED
+        FAILED
+    }
+
+    %% ========================================
+    %% PROMOÇÕES E DESCONTOS
+    %% ========================================
+
+    class Promotion {
+        +String id
+        +String name
+        +String? description
+        +PromotionType type
+        +Float discountValue
+        +Float? maxDiscountAmount
+        +String? code
+        +Boolean isCouponRequired
+        +DateTime startDate
+        +DateTime? endDate
+        +Boolean isActive
+        +Int? usageLimit
+        +Int usageCount
+        +Int? usageLimitPerUser
+        +Float? minPurchaseAmount
+        +Int? minQuantity
+        +Array applicableProductIds
+        +Array applicableCategories
+        +Array applicableCompanyIds
+        +Boolean isFirstPurchaseOnly
+        +Boolean isFreeShipping
+        +Boolean canStackWithOthers
+        +Int priority
+        +Int? buyQuantity
+        +Int? getQuantity
+        +String? createdById
+        +DateTime createdAt
+        +DateTime updatedAt
+    }
+
+    class PromotionUsage {
+        +String id
+        +String promotionId
+        +String userId
+        +String orderId
+        +Float discountApplied
+        +DateTime createdAt
+    }
+
+    class PromotionType {
+        <<enumeration>>
+        PERCENTAGE
+        FIXED_AMOUNT
+        FREE_SHIPPING
+        BOGO
+        FIXED_PRICE
+        QUANTITY_DISCOUNT
+    }
+
+    %% ========================================
+    %% CARRINHO E FAVORITOS
+    %% ========================================
+
+    class Cart {
+        +String id
+        +String? userId
+        +String? sessionId
+        +String companyId
+        +String? cep
+        +String? deliveryMethod
+        +Float? deliveryFee
+        +Int? estimatedDays
+        +String? couponCode
+        +Float? discountValue
+        +Float? totalAmount
+        +DateTime? expiresAt
+        +DateTime createdAt
+        +DateTime updatedAt
+    }
+
+    class CartItem {
+        +String id
+        +String cartId
+        +String productId
+        +Int quantity
+        +Float price
+        +DateTime createdAt
+        +DateTime updatedAt
+    }
+
+    class Favorite {
+        +String id
+        +String userId
+        +String companyId
+        +String productId
+        +DateTime createdAt
+    }
+
+    %% ========================================
+    %% SORTEIOS
+    %% ========================================
+
+    class Raffle {
+        +String id
+        +String title
+        +String? description
+        +DateTime startDate
+        +DateTime endDate
+        +DateTime drawDate
+        +Int? maxEntries
+        +Boolean isActive
+        +Boolean isDrawn
+        +String? prize
+        +Float? prizeValue
+        +DateTime createdAt
+        +DateTime updatedAt
+        +String companyId
+        +String userId
+    }
+
+    class RaffleEntry {
+        +String id
+        +String clientId
+        +String raffleId
+        +DateTime entryDate
+        +Boolean isWinner
+        +String code
+    }
+
+    %% ========================================
+    %% FEEDBACK E TESTES
+    %% ========================================
+
+    class UserFeedback {
+        +String id
+        +String testerName
+        +String? whatsapp
+        +String? screen
+        +Boolean? worked
+        +String? description
+        +String? improvementSuggestion
+        +String? untestedReason
+        +DateTime createdAt
+        +DateTime updatedAt
+        +String? sessionId
+        +String? userId
+    }
+
+    class TestSession {
+        +String id
+        +String testerName
+        +String? whatsapp
+        +DateTime startedAt
+        +DateTime? endedAt
+        +Json? context
+        +DateTime createdAt
+        +DateTime updatedAt
+    }
+
+    %% ========================================
+    %% RELACIONAMENTOS - USUÁRIOS E PLANOS
+    %% ========================================
+
+    User --> Plan
+    User --> Address
+    User --> Client
+    User --> Product
+    User --> Order
+    User --> UserCompany
+    User --> UserFeedback
+    User --> Raffle
+    User --> Cart
+    User --> Favorite
+    User --> ProductReview
+    User --> ReviewHelpfulVote
+    User --> Promotion
+    User --> PromotionUsage
+    User --> AuthProvider
+
+    %% ========================================
+    %% RELACIONAMENTOS - EMPRESA
+    %% ========================================
+
+    Company --> Client
+    Company --> Product
+    Company --> Order
+    Company --> UserCompany
+    Company --> Raffle
+    Company --> Cart
+    Company --> Favorite
+
+    UserCompany --> User
+    UserCompany --> Company
+    UserCompany --> Segment
+    UserCompany --> CompanyRole
+
+    %% ========================================
+    %% RELACIONAMENTOS - CLIENTES
+    %% ========================================
+
+    Client --> User
+    Client --> Company
+    Client --> Address
+    Client --> Order
+    Client --> RaffleEntry
+
+    Address --> User
+    Address --> Client
+    Address --> Order
+
+    %% ========================================
+    %% RELACIONAMENTOS - PRODUTOS E AVALIAÇÕES
+    %% ========================================
+
+    Product --> Company
+    Product --> User
+    Product --> OrderProduct
+    Product --> CartItem
+    Product --> Favorite
+    Product --> ProductReview
+
+    ProductReview --> Product
+    ProductReview --> User
+    ProductReview --> Order
+    ProductReview --> ReviewHelpfulVote
+    ProductReview --> ReviewStatus
+
+    ReviewHelpfulVote --> ProductReview
+    ReviewHelpfulVote --> User
+
+    %% ========================================
+    %% RELACIONAMENTOS - PEDIDOS
+    %% ========================================
+
+    Order --> User
+    Order --> Client
+    Order --> Company
+    Order --> Address
+    Order --> OrderProduct
+    Order --> Payment
+    Order --> ProductReview
+    Order --> PromotionUsage
+    Order --> OrderStatus
+
+    OrderProduct --> Order
+    OrderProduct --> Product
+
+    Payment --> Order
+    Payment --> PaymentMethod
+    Payment --> PaymentStatus
+
+    %% ========================================
+    %% RELACIONAMENTOS - PROMOÇÕES
+    %% ========================================
+
+    Promotion --> User
+    Promotion --> PromotionUsage
+    Promotion --> PromotionType
+
+    PromotionUsage --> Promotion
+    PromotionUsage --> User
+    PromotionUsage --> Order
+
+    %% ========================================
+    %% RELACIONAMENTOS - CARRINHO
+    %% ========================================
+
+    Cart --> User
+    Cart --> Company
+    Cart --> CartItem
+
+    CartItem --> Cart
+    CartItem --> Product
+
+    Favorite --> User
+    Favorite --> Product
+    Favorite --> Company
+
+    %% ========================================
+    %% RELACIONAMENTOS - SORTEIOS
+    %% ========================================
+
+    Raffle --> Company
+    Raffle --> User
+    Raffle --> RaffleEntry
+
+    RaffleEntry --> Client
+    RaffleEntry --> Raffle
+
+    %% ========================================
+    %% RELACIONAMENTOS - FEEDBACK
+    %% ========================================
+
+    UserFeedback --> TestSession
+    UserFeedback --> User
+
+    TestSession --> UserFeedback

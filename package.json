@@ -1,6 +1,6 @@
 {
   "name": "@vendabela",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "",
   "author": "",
   "private": true,
@@ -51,11 +51,12 @@
     "@nestjs/swagger": "^11.2.1",
     "@prisma/client": "^6.17.1",
     "axios": "^1.13.1",
+    "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1",
-    "twilio": "^5.10.5"
+    "resend": "^6.4.2",
+    "rxjs": "^7.8.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -63,6 +64,7 @@
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
+    "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.10.7",

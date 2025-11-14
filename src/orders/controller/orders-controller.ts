@@ -7,7 +7,7 @@ import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { UpdateOrderDto } from '../dto/update-order.dto';
 import { CartCheckoutDto } from '../dto/cart-checkout.dto';
 import { CurrentCompany } from 'store/decorators/current-company.decorator';
-import { AdminGuard } from 'auth/guards/admin.guard';
+import { AdminGuard } from '../../auth/guards/admin.guard';
 
 @ApiTags('Pedidos')
 @Controller('v1/orders')

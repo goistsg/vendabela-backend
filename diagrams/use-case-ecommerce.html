@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casos de Uso - E-commerce Vendabela</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #B2515E 0%, #2B2B2B 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #B2515E 0%, #BFA06A 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        .header p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 1.2em;
+        }
+        .content {
+            padding: 40px;
+        }
+        .diagram-wrapper {
+            background: #F8E9E0;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border: 2px solid #BFA06A;
+        }
+        .description {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            border-left: 4px solid #B2515E;
+            margin-bottom: 30px;
+        }
+        .description h2 {
+            color: #B2515E;
+            margin-top: 0;
+        }
+        .use-case-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        .use-case-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #BFA06A;
+            box-shadow: 0 2px 10px rgba(178, 81, 94, 0.1);
+        }
+        .use-case-card h3 {
+            color: #B2515E;
+            margin-top: 0;
+            font-size: 1.2em;
+        }
+        .use-case-card .icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        .use-case-card ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .use-case-card li {
+            color: #2B2B2B;
+            margin: 5px 0;
+        }
+        .footer {
+            padding: 30px;
+            text-align: center;
+            background: #F8E9E0;
+            border-top: 2px solid #BFA06A;
+            color: #2B2B2B;
+        }
+        .actors {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .actor-card {
+            background: linear-gradient(135deg, #B2515E 0%, #BFA06A 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            text-align: center;
+            min-width: 150px;
+        }
+        .actor-card .icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+        .actor-card h4 {
+            margin: 0;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛒 Casos de Uso - E-commerce</h1>
+            <p>Jornada Completa do Cliente | Vendabela</p>
+        </div>
+
+        <div class="content">
+            <div class="description">
+                <h2>📋 Visão Geral</h2>
+                <p>Este diagrama representa todos os casos de uso possíveis para um cliente realizar uma compra no e-commerce Vendabela, desde o cadastro até a avaliação pós-compra.</p>
+            </div>
+
+            <div class="actors">
+                <div class="actor-card">
+                    <div class="icon">👤</div>
+                    <h4>Cliente/Visitante</h4>
+                </div>
+                <div class="actor-card">
+                    <div class="icon">💳</div>
+                    <h4>Sistema de Pagamento</h4>
+                </div>
+                <div class="actor-card">
+                    <div class="icon">📧</div>
+                    <h4>Sistema de Email</h4>
+                </div>
+            </div>
+
+            <div class="diagram-wrapper">
+                <pre class="mermaid">
+flowchart TB
+    %% Atores
+    Cliente([👤 Cliente])
+    SistemaPagamento([💳 Sistema Pagamento])
+    SistemaEmail([📧 Sistema Email])
+
+    %% Grupo: Autenticação e Cadastro
+    subgraph Auth[" 🔐 Autenticação "]
+        UC1[Criar Conta]
+        UC2[Fazer Login]
+        UC3[Recuperar Senha]
+        UC4[Verificar Email]
+    end
+
+    %% Grupo: Navegação e Busca
+    subgraph Browse[" 🔍 Navegação "]
+        UC5[Buscar Produtos]
+        UC6[Filtrar por Categoria]
+        UC7[Ver Detalhes do Produto]
+        UC8[Ver Avaliações]
+        UC9[Adicionar aos Favoritos]
+    end
+
+    %% Grupo: Carrinho
+    subgraph Cart[" 🛒 Carrinho "]
+        UC10[Adicionar ao Carrinho]
+        UC11[Atualizar Quantidade]
+        UC12[Remover Item]
+        UC13[Aplicar Cupom de Desconto]
+        UC14[Calcular Frete]
+    end
+
+    %% Grupo: Checkout
+    subgraph Checkout[" 💰 Finalizar Compra "]
+        UC15[Selecionar Endereço]
+        UC16[Escolher Método de Entrega]
+        UC17[Escolher Método de Pagamento]
+        UC18[Confirmar Pedido]
+        UC19[Gerar PIX]
+        UC20[Processar Pagamento]
+    end
+
+    %% Grupo: Pós-Compra
+    subgraph PostSale[" 📦 Pós-Compra "]
+        UC21[Acompanhar Pedido]
+        UC22[Visualizar Histórico]
+        UC23[Avaliar Produto]
+        UC24[Reportar Problema]
+        UC25[Solicitar Devolução]
+    end
+
+    %% Grupo: Promoções
+    subgraph Promo[" 🎁 Promoções "]
+        UC26[Ver Promoções Ativas]
+        UC27[Participar de Sorteio]
+        UC28[Receber Newsletter]
+    end
+
+    %% Relacionamentos Cliente -> Casos de Uso
+    Cliente --> Auth
+    Cliente --> Browse
+    Cliente --> Cart
+    Cliente --> Checkout
+    Cliente --> PostSale
+    Cliente --> Promo
+
+    %% Relacionamentos internos
+    UC1 --> UC4
+    UC3 --> SistemaEmail
+    UC7 --> UC8
+    UC10 --> UC14
+    UC13 --> UC18
+    UC18 --> UC19
+    UC18 --> UC20
+    UC20 --> SistemaPagamento
+    UC18 --> SistemaEmail
+    UC21 --> SistemaEmail
+
+    %% Estilo
+    classDef authStyle fill:#B2515E,stroke:#2B2B2B,stroke-width:2px,color:#fff
+    classDef browseStyle fill:#BFA06A,stroke:#2B2B2B,stroke-width:2px,color:#fff
+    classDef cartStyle fill:#F8E9E0,stroke:#B2515E,stroke-width:2px,color:#2B2B2B
+    classDef checkoutStyle fill:#B2515E,stroke:#2B2B2B,stroke-width:2px,color:#fff
+    classDef postStyle fill:#BFA06A,stroke:#2B2B2B,stroke-width:2px,color:#fff
+    classDef promoStyle fill:#F8E9E0,stroke:#BFA06A,stroke-width:2px,color:#2B2B2B
+    classDef actorStyle fill:#2B2B2B,stroke:#B2515E,stroke-width:3px,color:#fff
+
+    class UC1,UC2,UC3,UC4 authStyle
+    class UC5,UC6,UC7,UC8,UC9 browseStyle
+    class UC10,UC11,UC12,UC13,UC14 cartStyle
+    class UC15,UC16,UC17,UC18,UC19,UC20 checkoutStyle
+    class UC21,UC22,UC23,UC24,UC25 postStyle
+    class UC26,UC27,UC28 promoStyle
+    class Cliente,SistemaPagamento,SistemaEmail actorStyle
+                </pre>
+            </div>
+
+            <h2 style="color: #B2515E; text-align: center; margin-top: 40px;">📝 Detalhamento dos Casos de Uso</h2>
+
+            <div class="use-case-list">
+                <div class="use-case-card">
+                    <div class="icon">🔐</div>
+                    <h3>1. Autenticação e Cadastro</h3>
+                    <ul>
+                        <li><strong>UC1:</strong> Criar Conta (Email/WhatsApp/OAuth)</li>
+                        <li><strong>UC2:</strong> Fazer Login</li>
+                        <li><strong>UC3:</strong> Recuperar Senha</li>
+                        <li><strong>UC4:</strong> Verificar Email</li>
+                    </ul>
+                    <p><strong>Ator:</strong> Cliente/Visitante</p>
+                    <p><strong>Pré-condição:</strong> Acesso à plataforma</p>
+                </div>
+
+                <div class="use-case-card">
+                    <div class="icon">🔍</div>
+                    <h3>2. Navegação e Busca</h3>
+                    <ul>
+                        <li><strong>UC5:</strong> Buscar Produtos (por nome, categoria)</li>
+                        <li><strong>UC6:</strong> Filtrar por Categoria/Preço</li>
+                        <li><strong>UC7:</strong> Ver Detalhes do Produto</li>
+                        <li><strong>UC8:</strong> Ver Avaliações de Clientes</li>
+                        <li><strong>UC9:</strong> Adicionar aos Favoritos</li>
+                    </ul>
+                    <p><strong>Ator:</strong> Cliente (autenticado ou não)</p>
+                </div>
+
+                <div class="use-case-card">
+                    <div class="icon">🛒</div>
+                    <h3>3. Gestão do Carrinho</h3>
+                    <ul>
+                        <li><strong>UC10:</strong> Adicionar Produto ao Carrinho</li>
+                        <li><strong>UC11:</strong> Atualizar Quantidade</li>
+                        <li><strong>UC12:</strong> Remover Item do Carrinho</li>
+                        <li><strong>UC13:</strong> Aplicar Cupom de Desconto</li>
+                        <li><strong>UC14:</strong> Calcular Frete</li>
+                    </ul>
+                    <p><strong>Pré-condição:</strong> Produto selecionado</p>
+                </div>
+
+                <div class="use-case-card">
+                    <div class="icon">💰</div>
+                    <h3>4. Checkout e Pagamento</h3>
+                    <ul>
+                        <li><strong>UC15:</strong> Selecionar Endereço de Entrega</li>
+                        <li><strong>UC16:</strong> Escolher Método de Entrega</li>
+                        <li><strong>UC17:</strong> Escolher Método de Pagamento</li>
+                        <li><strong>UC18:</strong> Confirmar Pedido</li>
+                        <li><strong>UC19:</strong> Gerar QR Code PIX</li>
+                        <li><strong>UC20:</strong> Processar Pagamento</li>
+                    </ul>
+                    <p><strong>Pré-condição:</strong> Carrinho com itens</p>
+                    <p><strong>Pós-condição:</strong> Pedido criado</p>
+                </div>
+
+                <div class="use-case-card">
+                    <div class="icon">📦</div>
+                    <h3>5. Pós-Compra</h3>
+                    <ul>
+                        <li><strong>UC21:</strong> Acompanhar Status do Pedido</li>
+                        <li><strong>UC22:</strong> Visualizar Histórico de Compras</li>
+                        <li><strong>UC23:</strong> Avaliar Produto Comprado</li>
+                        <li><strong>UC24:</strong> Reportar Problema</li>
+                        <li><strong>UC25:</strong> Solicitar Devolução</li>
+                    </ul>
+                    <p><strong>Pré-condição:</strong> Pedido realizado</p>
+                </div>
+
+                <div class="use-case-card">
+                    <div class="icon">🎁</div>
+                    <h3>6. Promoções e Engajamento</h3>
+                    <ul>
+                        <li><strong>UC26:</strong> Ver Promoções Ativas (BOGO, Desconto %)</li>
+                        <li><strong>UC27:</strong> Participar de Sorteios</li>
+                        <li><strong>UC28:</strong> Receber Newsletter com Ofertas</li>
+                    </ul>
+                    <p><strong>Ator:</strong> Cliente autenticado</p>
+                </div>
+
+                <div class="use-case-card">
+                    <div class="icon">💳</div>
+                    <h3>7. Sistema de Pagamento</h3>
+                    <ul>
+                        <li>Validar cartão de crédito</li>
+                        <li>Processar PIX</li>
+                        <li>Confirmar pagamento</li>
+                        <li>Notificar sistema</li>
+                    </ul>
+                    <p><strong>Ator:</strong> Sistema Externo</p>
+                    <p><strong>Integração:</strong> Gateway de Pagamento</p>
+                </div>
+
+                <div class="use-case-card">
+                    <div class="icon">📧</div>
+                    <h3>8. Sistema de Email</h3>
+                    <ul>
+                        <li>Confirmação de cadastro</li>
+                        <li>Recuperação de senha</li>
+                        <li>Confirmação de pedido</li>
+                        <li>Atualização de status</li>
+                        <li>Promoções e ofertas</li>
+                    </ul>
+                    <p><strong>Ator:</strong> Sistema Interno</p>
+                    <p><strong>Serviço:</strong> Resend</p>
+                </div>
+            </div>
+
+            <div class="description" style="margin-top: 40px;">
+                <h2>🔄 Fluxo Típico de Compra</h2>
+                <ol style="font-size: 1.1em; line-height: 1.8;">
+                    <li><strong>Visitante</strong> acessa o e-commerce</li>
+                    <li><strong>Busca/Navega</strong> pelos produtos</li>
+                    <li><strong>Visualiza detalhes</strong> e avaliações</li>
+                    <li><strong>Adiciona ao carrinho</strong> (pode ou não estar logado)</li>
+                    <li><strong>Cria conta ou faz login</strong> (se ainda não estiver)</li>
+                    <li><strong>Aplica cupom</strong> de desconto (se tiver)</li>
+                    <li><strong>Calcula frete</strong> informando CEP</li>
+                    <li><strong>Seleciona endereço</strong> de entrega</li>
+                    <li><strong>Escolhe forma de pagamento</strong> (PIX, Cartão, etc.)</li>
+                    <li><strong>Confirma pedido</strong></li>
+                    <li><strong>Realiza pagamento</strong></li>
+                    <li><strong>Recebe confirmação</strong> por email</li>
+                    <li><strong>Acompanha entrega</strong></li>
+                    <li><strong>Avalia produto</strong> após recebimento</li>
+                </ol>
+            </div>
+
+            <div class="description">
+                <h2>🎯 Regras de Negócio Principais</h2>
+                <ul style="font-size: 1.1em; line-height: 1.8;">
+                    <li>✅ Cliente pode navegar sem login, mas precisa estar autenticado para finalizar compra</li>
+                    <li>✅ Carrinho persiste entre sessões para usuários logados</li>
+                    <li>✅ Cupons e promoções são validados antes da confirmação</li>
+                    <li>✅ Estoque é verificado em tempo real antes do checkout</li>
+                    <li>✅ Apenas compras verificadas podem ser avaliadas</li>
+                    <li>✅ Pagamentos PIX têm QR Code com validade de 30 minutos</li>
+                    <li>✅ Emails automáticos são enviados em cada etapa importante</li>
+                    <li>✅ Promoções BOGO (Compre X, Leve Y) aplicam-se automaticamente</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>📊 <strong>Diagrama de Casos de Uso</strong> - E-commerce Vendabela</p>
+            <p>Gerado automaticamente | Vendabela Backend v0.2.3</p>
+        </div>
+    </div>
+</body>
+</html>
+

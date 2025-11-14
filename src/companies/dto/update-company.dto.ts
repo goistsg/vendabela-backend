@@ -28,4 +28,40 @@ export class UpdateCompanyDto {
   @IsOptional()
   @IsBoolean()
   isPrivate?: boolean;
+
+  @ApiProperty({
+    description: 'Email do remetente',
+    example: 'noreply@empresa.com',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  emailFrom?: string;
+
+  @ApiProperty({
+    description: 'Nome do remetente',
+    example: 'Empresa Exemplo Ltda',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  emailFromName?: string;
+
+  @ApiProperty({
+    description: 'Email para respostas',
+    example: 'respostas@empresa.com',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  emailReplyTo?: string;
+
+  @ApiProperty({
+    description: 'URL do app/site da empresa',
+    example: 'https://vendabela.com.br',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  appUrl?: string;
 }

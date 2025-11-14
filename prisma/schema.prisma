@@ -8,25 +8,68 @@ datasource db {
 }
 
 model User {
-  id        String        @id @default(uuid())
-  name      String
-  whatsapp  String        @unique
-  otpCode   String?
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  planId    String
-  addresses Address[]
-  clients   Client[]
-  products  Product[]
-  orders    Order[]
-  companies UserCompany[]
-  plan      Plan          @relation(fields: [planId], references: [id])
-  feedbacks UserFeedback[]
-  raffles   Raffle[]
-  carts     Cart[]
-  favorites Favorite[]
+  id       String  @id @default(uuid())
+  name     String
+  whatsapp String? @unique
+  otpCode  String?
 
+  // ====== AUTENTICAÇÃO ======
+  email           String?   @unique
+  password        String? // Hash bcrypt - Nullable para OAuth users
+  emailVerified   Boolean   @default(false)
+  emailVerifiedAt DateTime?
+
+  // ====== MÉTODO ATIVO ======
+  authProvider AuthProvider @default(EMAIL)
+
+  // ====== 2FA (Preparado para futuro) ======
+  totpSecret      String?
+  totpEnabled     Boolean  @default(false)
+  totpBackupCodes String[] @default([])
+
+  // ====== SEGURANÇA ======
+  lastLoginAt          DateTime?
+  passwordChangedAt    DateTime?
+  resetPasswordToken   String?   @unique
+  resetPasswordExpires DateTime?
+
+  // ====== STATUS ======
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  planId             String
+  plan               Plan                @relation(fields: [planId], references: [id])
+  addresses          Address[]
+  clients            Client[]
+  products           Product[]
+  orders             Order[]
+  companies          UserCompany[]
+  feedbacks          UserFeedback[]
+  raffles            Raffle[]
+  carts              Cart[]
+  favorites          Favorite[]
+  reviews            ProductReview[]
+  sellerResponses    ProductReview[]     @relation("SellerResponses")
+  reviewHelpfulVotes ReviewHelpfulVote[]
+  createdPromotions  Promotion[]
+  promotionUsages    PromotionUsage[]
+
+  // ADICIONAR ÍNDICES (antes do @@map)
+  @@index([email])
+  @@index([resetPasswordToken])
+  @@index([isActive])
   @@map("users")
+}
+
+enum AuthProvider {
+  EMAIL // Email + Senha tradicional
+  GOOGLE // Google OAuth (futuro)
+  FACEBOOK // Facebook OAuth (futuro)
+  MAGIC_LINK // Passwordless via email (futuro)
+  PHONE // SMS/WhatsApp (legado)
+  TOTP // Authenticator app (futuro)
 }
 
 model Plan {
@@ -44,63 +87,70 @@ model Plan {
 }
 
 model Segment {
-  id        String        @id @default(uuid())
-  name      String        @unique
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id            String        @id @default(uuid())
+  name          String        @unique
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   userCompanies UserCompany[]
 
   @@map("segments")
 }
 
 model Company {
-  id         String        @id @default(uuid())
+  id         String   @id @default(uuid())
   name       String
-  identifier String?       @unique
-  isPrivate  Boolean       @default(false)
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
-  clients    Client[]
-  products   Product[]
-  orders     Order[]
-  users      UserCompany[]
-  raffles    Raffle[]
-  carts      Cart[]
-  favorites  Favorite[]
+  identifier String?  @unique
+  isPrivate  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // ====== CONFIGURAÇÕES DE EMAIL ======
+  emailFrom     String? // Email do remetente (ex: noreply@empresa.com)
+  emailFromName String? // Nome exibido no email (ex: "Minha Empresa")
+  emailReplyTo  String? // Email para respostas (opcional)
+  appUrl        String? // URL do app/site da empresa (ex: https://empresa.com)
+
+  clients   Client[]
+  products  Product[]
+  orders    Order[]
+  users     UserCompany[]
+  raffles   Raffle[]
+  carts     Cart[]
+  favorites Favorite[]
 
   @@map("companies")
 }
 
 model UserCompany {
-  id            String      @id @default(uuid())
-  userId        String
-  companyId     String
-  segmentId     String
-  role          CompanyRole @default(CONSULTANT)
-  createdAt     DateTime    @default(now())
-  company       Company     @relation(fields: [companyId], references: [id])
-  user          User        @relation(fields: [userId], references: [id])
-  segment       Segment     @relation(fields: [segmentId], references: [id])
+  id        String      @id @default(uuid())
+  userId    String
+  companyId String
+  segmentId String
+  role      CompanyRole @default(CONSULTANT)
+  createdAt DateTime    @default(now())
+  company   Company     @relation(fields: [companyId], references: [id])
+  user      User        @relation(fields: [userId], references: [id])
+  segment   Segment     @relation(fields: [segmentId], references: [id])
 
   @@unique([userId, companyId])
   @@map("user_companies")
 }
 
 model Client {
-  id            String    @id @default(uuid())
+  id            String        @id @default(uuid())
   name          String
-  phone         String?   @unique
-  email         String?   @unique
+  phone         String?       @unique
+  email         String?       @unique
   birthday      DateTime?
   origin        String?
-  leadScore     Int       @default(0)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  leadScore     Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   userId        String
   companyId     String
   addresses     Address[]
-  company       Company   @relation(fields: [companyId], references: [id])
-  user          User      @relation(fields: [userId], references: [id])
+  company       Company       @relation(fields: [companyId], references: [id])
+  user          User          @relation(fields: [userId], references: [id])
   orders        Order[]
   raffleEntries RaffleEntry[]
 
@@ -132,52 +182,62 @@ model Address {
 }
 
 model Product {
-  id              String        @id @default(uuid())
+  id              String   @id @default(uuid())
   name            String
   category        String?
-  sku             String?       @unique
+  sku             String?  @unique
   description     String?
-  imageUrls       String[]      @default([])
-  recommendations String[]      @default([])
+  imageUrls       String[] @default([])
+  recommendations String[] @default([])
   usageNotes      String?
-  costPrice       Float         @default(0.0)
-  lastPrice       Float         @default(0.0)
-  salePrice       Float         @default(0.0)
-  stock           Int           @default(0)
-  hasSample       Boolean       @default(false)
+  costPrice       Float    @default(0.0)
+  lastPrice       Float    @default(0.0)
+  salePrice       Float    @default(0.0)
+  stock           Int      @default(0)
+  hasSample       Boolean  @default(false)
   sampleQuantity  Int?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  companyId       String
-  userId          String
 
-  company         Company       @relation(fields: [companyId], references: [id])
-  user            User          @relation(fields: [userId], references: [id])
-  orders          OrderProduct[]
-  cartItems       CartItem[]
-  favorites       Favorite[]
+  ingredients   String[] @default([])
+  allergens     String[] @default([])
+  cautions      String?
+  averageRating Float?
+  reviewCount   Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  companyId String
+  userId    String
+
+  company   Company         @relation(fields: [companyId], references: [id])
+  user      User            @relation(fields: [userId], references: [id])
+  orders    OrderProduct[]
+  cartItems CartItem[]
+  favorites Favorite[]
+  reviews   ProductReview[]
 
   @@map("products")
 }
 
 model Order {
-  id          String        @id @default(uuid())
-  status      OrderStatus   @default(OPEN)
-  total       Float         @default(0.0)
-  discount    Float         @default(0.0)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  userId      String
-  clientId    String
-  companyId   String
-  addressId   String?
-  products    OrderProduct[]
-  payments    Payment[]
+  id              String           @id @default(uuid())
+  status          OrderStatus      @default(OPEN)
+  total           Float            @default(0.0)
+  discount        Float            @default(0.0)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  userId          String
+  clientId        String
+  companyId       String
+  addressId       String?
+  products        OrderProduct[]
+  payments        Payment[]
+  reviews         ProductReview[]
+  promotionUsages PromotionUsage[]
 
-  address     Address?      @relation("OrderAddress", fields: [addressId], references: [id])
-  client      Client        @relation(fields: [clientId], references: [id])
-  company     Company       @relation(fields: [companyId], references: [id])
-  user        User          @relation(fields: [userId], references: [id])
+  address Address? @relation("OrderAddress", fields: [addressId], references: [id])
+  client  Client   @relation(fields: [clientId], references: [id])
+  company Company  @relation(fields: [companyId], references: [id])
+  user    User     @relation(fields: [userId], references: [id])
 
   @@map("orders")
 }
@@ -195,78 +255,79 @@ model OrderProduct {
 }
 
 enum CompanyRole {
-  CONSUMER       // Cliente final
-  CONSULTANT     // Consultora (quem vende)
-  DIRECTOR       // Diretora (superior hierárquico das consultoras)
-  COMPANY_ADMIN  // Admin da empresa ou da rede
-  STORE          // Loja física / unidade comercial
+  CONSUMER // Cliente final
+  CONSULTANT // Consultora (quem vende)
+  DIRECTOR // Diretora (superior hierárquico das consultoras)
+  COMPANY_ADMIN // Admin da empresa ou da rede
+  STORE // Loja física / unidade comercial
 }
 
 enum OrderStatus {
   OPEN
   PAID
+  SEPARATING
   DELIVERED
   CANCELED
 }
 
 model UserFeedback {
-  id                      String     @id @default(uuid())
-  testerName              String
-  whatsapp                String?    // opcional — útil para captação de lead ou contato posterior
-  screen                  String?    // tela/funcionalidade testada (ex: "Tela de Login", "Carrinho", etc.)
-  worked                  Boolean?   // indica se funcionou ou não
-  description             String?    // descrição do que foi testado ou problema encontrado
-  improvementSuggestion   String?    // sugestão de melhoria (ex: “botão poderia ser mais visível”)
-  untestedReason          String?    // se algo não foi testado, o motivo (ex: "não estava implementado")
-  createdAt               DateTime   @default(now())
-  updatedAt               DateTime   @updatedAt
+  id                    String   @id @default(uuid())
+  testerName            String
+  whatsapp              String? // opcional — útil para captação de lead ou contato posterior
+  screen                String? // tela/funcionalidade testada (ex: "Tela de Login", "Carrinho", etc.)
+  worked                Boolean? // indica se funcionou ou não
+  description           String? // descrição do que foi testado ou problema encontrado
+  improvementSuggestion String? // sugestão de melhoria (ex: “botão poderia ser mais visível”)
+  untestedReason        String? // se algo não foi testado, o motivo (ex: "não estava implementado")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   // Campos relacionados a sessão de teste
-  sessionId               String?
-  session                 TestSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId String?
+  session   TestSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   // Se quiser atrelar futuramente a um usuário do sistema
-  userId                  String?    
-  user                    User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@map("user_feedbacks")
 }
 
 model TestSession {
-  id          String          @id @default(uuid())
-  testerName  String
-  whatsapp    String?
-  startedAt   DateTime        @default(now())
-  endedAt     DateTime?
-  context     Json?
-  feedbacks   UserFeedback[]
+  id         String         @id @default(uuid())
+  testerName String
+  whatsapp   String?
+  startedAt  DateTime       @default(now())
+  endedAt    DateTime?
+  context    Json?
+  feedbacks  UserFeedback[]
 
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("test_sessions")
 }
 
 model Raffle {
-  id          String        @id @default(uuid())
+  id          String   @id @default(uuid())
   title       String
   description String?
   startDate   DateTime
   endDate     DateTime
   drawDate    DateTime
   maxEntries  Int?
-  isActive    Boolean       @default(true)
-  isDrawn     Boolean       @default(false)
+  isActive    Boolean  @default(true)
+  isDrawn     Boolean  @default(false)
   prize       String?
   prizeValue  Float?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   companyId   String
   userId      String
 
-  company     Company       @relation(fields: [companyId], references: [id])
-  user        User          @relation(fields: [userId], references: [id])
-  entries     RaffleEntry[]
+  company Company       @relation(fields: [companyId], references: [id])
+  user    User          @relation(fields: [userId], references: [id])
+  entries RaffleEntry[]
 
   @@map("raffles")
 }
@@ -279,8 +340,8 @@ model RaffleEntry {
   isWinner  Boolean  @default(false)
   code      String   @unique // Código único para o sorteio (ex: "A5D9F2")
 
-  client    Client   @relation(fields: [clientId], references: [id])
-  raffle    Raffle   @relation(fields: [raffleId], references: [id])
+  client Client @relation(fields: [clientId], references: [id])
+  raffle Raffle @relation(fields: [raffleId], references: [id])
 
   @@unique([clientId, raffleId])
   @@map("raffle_entries")
@@ -292,84 +353,81 @@ enum DeliveryMethod {
 }
 
 model Cart {
-  id              String      @id @default(uuid())
-  userId          String?     @unique()
-  sessionId       String?     // se anônimo
-  companyId       String      // empresa dona dos produtos
-  
+  id        String  @id @default(uuid())
+  userId    String? @unique()
+  sessionId String? // se anônimo
+  companyId String // empresa dona dos produtos
+
   // Entrega / Frete
-  cep             String?     // usado para cálculo de frete
-  deliveryMethod  String?     // ex: "PAC", "Sedex", "Retirada"
-  deliveryFee     Float?      // valor do frete estimado
-  estimatedDays   Int?        // prazo de entrega em dias
+  cep            String? // usado para cálculo de frete
+  deliveryMethod String? // ex: "PAC", "Sedex", "Retirada"
+  deliveryFee    Float? // valor do frete estimado
+  estimatedDays  Int? // prazo de entrega em dias
 
   // Descontos / Totais
-  couponCode      String?     // código do cupom aplicado
-  discountValue   Float?      // valor total do desconto
-  totalAmount     Float?      // subtotal dos itens - desconto + frete
+  couponCode    String? // código do cupom aplicado
+  discountValue Float? // valor total do desconto
+  totalAmount   Float? // subtotal dos itens - desconto + frete
 
   // Controle
-  expiresAt       DateTime?   // expiração do carrinho
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  expiresAt DateTime? // expiração do carrinho
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   // Relacionamentos
-  user            User?       @relation(fields: [userId], references: [id])
-  company         Company     @relation(fields: [companyId], references: [id])
-  items           CartItem[]
+  user    User?      @relation(fields: [userId], references: [id])
+  company Company    @relation(fields: [companyId], references: [id])
+  items   CartItem[]
 
+  @@unique([userId, companyId], name: "cart_user_company_unique")
+  @@unique([sessionId, companyId], name: "cart_session_company_unique")
   @@index([userId])
   @@index([sessionId])
   @@index([companyId])
-  @@unique([userId, companyId], name: "cart_user_company_unique")
-  @@unique([sessionId, companyId], name: "cart_session_company_unique")
-
   @@map("carts")
 }
 
 model CartItem {
-  id          String   @id @default(uuid())
-  cartId      String
-  productId   String
-  quantity    Int
-  price       Float    // snapshot do preço no momento da adição
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(uuid())
+  cartId    String
+  productId String
+  quantity  Int
+  price     Float // snapshot do preço no momento da adição
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  cart        Cart     @relation(fields: [cartId], references: [id])
-  product     Product  @relation(fields: [productId], references: [id])
+  cart    Cart    @relation(fields: [cartId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
 
   @@index([cartId])
-
   @@map("cart_items")
 }
 
 model Favorite {
-  id          String   @id @default(uuid())
-  userId      String
-  companyId   String
-  productId   String
-  createdAt   DateTime @default(now())
+  id        String   @id @default(uuid())
+  userId    String
+  companyId String
+  productId String
+  createdAt DateTime @default(now())
 
-  user        User     @relation(fields: [userId], references: [id])
-  product     Product  @relation(fields: [productId], references: [id])
-  company     Company  @relation(fields: [companyId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+  company Company @relation(fields: [companyId], references: [id])
 
   @@unique([userId, productId])
-
   @@map("favorites")
 }
 
 model Payment {
-  id          String          @id @default(uuid())
-  orderId     String
-  method      PaymentMethod
-  qrCode      String?
-  pixPayload  String?
-  status      PaymentStatus   @default(PENDING)
-  createdAt   DateTime        @default(now())
+  id         String        @id @default(uuid())
+  orderId    String
+  method     PaymentMethod
+  qrCode     String?
+  pixPayload String?
+  status     PaymentStatus @default(PENDING)
+  createdAt  DateTime      @default(now())
 
-  order       Order           @relation(fields: [orderId], references: [id])
+  order Order @relation(fields: [orderId], references: [id])
 
   @@map("payments")
 }
@@ -386,4 +444,163 @@ enum PaymentStatus {
   PENDING
   COMPLETED
   FAILED
+}
+
+model ProductReview {
+  id        String  @id @default(uuid())
+  productId String
+  userId    String
+  orderId   String?
+
+  rating  Int // 1-5
+  title   String?
+  comment String
+  images  String[] @default([])
+
+  isVerifiedPurchase Boolean      @default(false)
+  status             ReviewStatus @default(PENDING)
+
+  helpfulCount    Int @default(0)
+  notHelpfulCount Int @default(0)
+
+  sellerResponse    String?
+  sellerRespondedAt DateTime?
+  sellerResponderId String?
+
+  editedAt        DateTime?
+  reportedCount   Int       @default(0)
+  reportedReasons String[]  @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product         Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order           Order?              @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  sellerResponder User?               @relation("SellerResponses", fields: [sellerResponderId], references: [id], onDelete: SetNull)
+  helpfulVotes    ReviewHelpfulVote[]
+
+  @@unique([userId, productId, orderId])
+  @@index([productId])
+  @@index([userId])
+  @@index([rating])
+  @@index([status])
+  @@index([createdAt])
+  @@index([productId, status])
+  @@map("product_reviews")
+}
+
+model ReviewHelpfulVote {
+  id        String   @id @default(uuid())
+  reviewId  String
+  userId    String
+  isHelpful Boolean
+  createdAt DateTime @default(now())
+
+  review ProductReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewId, userId])
+  @@index([reviewId])
+  @@map("review_helpful_votes")
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  HIDDEN
+  FLAGGED
+}
+
+// ====== PROMOÇÕES E DESCONTOS ======
+
+model Promotion {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+
+  // ====== TIPO DE DESCONTO ======
+  type              PromotionType
+  discountValue     Float // Valor do desconto (% ou R$)
+  maxDiscountAmount Float? // Valor máximo de desconto (para %)
+
+  // ====== CÓDIGO DE CUPOM ======
+  code             String? @unique // Código do cupom (ex: "NATAL2024")
+  isCouponRequired Boolean @default(false) // Se true, precisa digitar código
+
+  // ====== VALIDADE ======
+  startDate DateTime
+  endDate   DateTime?
+  isActive  Boolean   @default(true)
+
+  // ====== LIMITES DE USO ======
+  usageLimit        Int? // Limite total de usos
+  usageCount        Int  @default(0) // Contador de usos
+  usageLimitPerUser Int? // Limite por usuário
+
+  // ====== CONDIÇÕES DE APLICAÇÃO ======
+  minPurchaseAmount Float? // Valor mínimo de compra
+  minQuantity       Int? // Quantidade mínima de itens
+
+  // Aplicável a produtos específicos
+  applicableProductIds String[] @default([])
+
+  // Aplicável a categorias específicas
+  applicableCategories String[] @default([])
+
+  // Aplicável a empresas específicas (multi-tenant)
+  applicableCompanyIds String[] @default([])
+
+  // ====== REGRAS ESPECIAIS ======
+  isFirstPurchaseOnly Boolean @default(false) // Apenas primeira compra
+  isFreeShipping      Boolean @default(false) // Frete grátis
+  canStackWithOthers  Boolean @default(false) // Pode acumular com outras promoções
+  priority            Int     @default(0) // Prioridade (maior = aplica primeiro)
+
+  // ====== REGRA BOGO (Buy One Get One) ======
+  buyQuantity Int? // Compre X
+  getQuantity Int? // Leve Y
+
+  // ====== METADADOS ======
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // ====== RELAÇÕES ======
+  creator User?            @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  usages  PromotionUsage[]
+
+  @@index([code])
+  @@index([isActive])
+  @@index([startDate, endDate])
+  @@index([type])
+  @@map("promotions")
+}
+
+model PromotionUsage {
+  id              String   @id @default(uuid())
+  promotionId     String
+  userId          String
+  orderId         String
+  discountApplied Float // Valor do desconto aplicado
+  createdAt       DateTime @default(now())
+
+  promotion Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([promotionId])
+  @@index([userId])
+  @@index([orderId])
+  @@map("promotion_usages")
+}
+
+enum PromotionType {
+  PERCENTAGE // Desconto em porcentagem (ex: 10%)
+  FIXED_AMOUNT // Desconto em valor fixo (ex: R$ 50)
+  FREE_SHIPPING // Frete grátis
+  BOGO // Buy One Get One (Compre X, Leve Y)
+  FIXED_PRICE // Preço fixo para o produto (ex: R$ 99,90)
+  QUANTITY_DISCOUNT // Desconto por quantidade (ex: Compre 3, pague 2)
 }

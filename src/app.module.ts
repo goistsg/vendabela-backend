@@ -5,6 +5,8 @@ import { CompaniesModule } from './companies/companies.module';
 import { UserCompaniesModule } from './user-companies/user-companies.module';
 import { ClientsModule } from './clients/clients.module';
 import { ProductsModule } from './products/products.module';
+import { ProductsReviewModule } from './products-review/products-review.module';
+import { PromotionsModule } from './promotions/promotions.module';
 import { OrdersModule } from './orders/orders.module';
 import { AddressModule } from './address/address.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -24,7 +26,9 @@ import { StoreModule } from './store/store.module';
     CompaniesModule,
     UserCompaniesModule,
     ClientsModule,
-    ProductsModule, 
+    ProductsModule,
+    ProductsReviewModule,
+    PromotionsModule,
     OrdersModule,
     AddressModule,
     FeedbacksModule,
