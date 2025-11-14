@@ -31,58 +31,100 @@ export class AuthService {
       throw new NotFoundException('Usuário não encontrado');
     }
 
-    // Gerar OTP de 6 dígitos
-    const otpCode = this.generateOTP();
+    // Verificar se está usando Twilio Verify API
+    const usingVerifyApi = this.twilioSmsService.isUsingVerifyApi();
     
-    // Salvar OTP no usuário
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { otpCode }
-    });
+    let otpCode: string | undefined;
 
-    // Enviar OTP via SMS usando Twilio
-    const smsSent = await this.twilioSmsService.sendOtpSms(user.whatsapp, otpCode);
+    if (usingVerifyApi) {
+      // Twilio Verify API gera e gerencia o OTP automaticamente
+      // Não precisa salvar no banco
+      await this.twilioSmsService.sendOtpSms(user.whatsapp);
+    } else {
+      // Método tradicional: gerar OTP e salvar no banco
+      otpCode = this.generateOTP();
+      
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { otpCode }
+      });
 
-    if (!smsSent && process.env.NODE_ENV === 'production') {
-      // Em produção, se o SMS falhar, ainda permitir (mas logar o erro)
-      console.error(`Falha ao enviar SMS para ${user.whatsapp}`);
+      await this.twilioSmsService.sendOtpSms(user.whatsapp, otpCode);
     }
 
     return {
-      message: 'OTP enviado com sucesso',
+      message: usingVerifyApi 
+        ? 'Código de verificação enviado via SMS' 
+        : 'OTP enviado com sucesso',
       whatsapp: user.whatsapp,
-      smsSent: smsSent,
-      // Em desenvolvimento, retornar o OTP para facilitar testes
-      otpCode: process.env.NODE_ENV === 'development' ? otpCode : undefined
+      usingVerifyApi,
+      // Em desenvolvimento, retornar o OTP para facilitar testes (só no modo tradicional)
+      otpCode: process.env.NODE_ENV === 'development' && !usingVerifyApi ? otpCode : undefined
     };
   }
 
   async verifyOtp(dto: VerifyOtpDto) {
-    const user = await this.prisma.user.findFirst({ 
-      where: { 
-        whatsapp: dto.whatsapp, 
-        otpCode: dto.otpCode 
-      },
-      include: {
-        plan: true,
-        companies: {
-          include: {
-            company: true,
-            segment: true
+    // Verificar se está usando Twilio Verify API
+    const usingVerifyApi = this.twilioSmsService.isUsingVerifyApi();
+    
+    let user;
+
+    if (usingVerifyApi) {
+      // Verificar OTP através da Twilio Verify API
+      const isValidOtp = await this.twilioSmsService.verifyOtpCode(
+        dto.whatsapp,
+        dto.otpCode
+      );
+
+      if (!isValidOtp) {
+        throw new UnauthorizedException('Código inválido ou expirado');
+      }
+
+      // Buscar usuário após validação bem-sucedida
+      user = await this.prisma.user.findUnique({
+        where: { whatsapp: dto.whatsapp },
+        include: {
+          plan: true,
+          companies: {
+            include: {
+              company: true,
+              segment: true
+            }
           }
         }
+      });
+
+      if (!user) {
+        throw new NotFoundException('Usuário não encontrado');
       }
-    });
+    } else {
+      // Método tradicional: verificar OTP no banco de dados
+      user = await this.prisma.user.findFirst({ 
+        where: { 
+          whatsapp: dto.whatsapp, 
+          otpCode: dto.otpCode 
+        },
+        include: {
+          plan: true,
+          companies: {
+            include: {
+              company: true,
+              segment: true
+            }
+          }
+        }
+      });
 
-    if (!user) {
-      throw new UnauthorizedException('OTP inválido ou expirado');
+      if (!user) {
+        throw new UnauthorizedException('OTP inválido ou expirado');
+      }
+
+      // Limpar OTP após verificação bem-sucedida
+      await this.prisma.user.update({
+        where: { id: user.id },
+        data: { otpCode: null }
+      });
     }
-
-    // Limpar OTP após verificação bem-sucedida
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { otpCode: null }
-    });
 
     // Gerar token JWT
     const token = this.generateJwtToken(user.id);
