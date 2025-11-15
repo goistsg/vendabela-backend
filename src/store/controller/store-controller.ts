@@ -9,7 +9,6 @@ import { Request } from 'express';
 
 @ApiTags('Loja')
 @Controller('v1/store')
-@UseGuards(OptionalAuthGuard)
 @ApiHeader({
   name: 'company-id',
   description: 'ID da empresa (UUID)',
@@ -41,6 +40,7 @@ export class StoreController {
     @Query('search') search?: string,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
+    @Query('orderBy') orderBy?: string,
     @Req() request?: Request,
   ) {
     const userId = (request as any)?.user?.id;
@@ -49,6 +49,7 @@ export class StoreController {
       search,
       page: page ? Number(page) : undefined,
       limit: limit ? Number(limit) : undefined,
+      orderBy: orderBy ? orderBy : undefined,
       userId,
     });
   }

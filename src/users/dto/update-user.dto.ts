@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString, Matches, IsUUID } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, Matches, IsUUID, IsEmail } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateUserDto {
@@ -11,6 +11,15 @@ export class UpdateUserDto {
   @IsString()
   @IsNotEmpty()
   name?: string;
+
+  @ApiProperty({
+    description: 'Email do usuário',
+    example: 'joao@exemplo.com',
+    required: false,
+  })
+  @IsOptional()
+  @IsEmail()
+  email?: string;
 
   @ApiProperty({
     description: 'Número de WhatsApp (formato E.164)',

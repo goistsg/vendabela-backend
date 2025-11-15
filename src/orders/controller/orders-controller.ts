@@ -8,6 +8,7 @@ import { UpdateOrderDto } from '../dto/update-order.dto';
 import { CartCheckoutDto } from '../dto/cart-checkout.dto';
 import { CurrentCompany } from 'store/decorators/current-company.decorator';
 import { AdminGuard } from '../../auth/guards/admin.guard';
+import { IsCompanyAdmin } from '../../store/decorators/is-company-admin.decorator';
 
 @ApiTags('Pedidos')
 @Controller('v1/orders')
@@ -71,7 +72,20 @@ export class OrdersController {
   @ApiResponse({ status: 200, description: 'Pedido encontrado' })
   @ApiResponse({ status: 404, description: 'Pedido não encontrado' })
   @ApiResponse({ status: 401, description: 'Não autenticado' })
-  async findOne(@Param('id') id: string, @CurrentUser() user: any) {
+  @ApiHeader({
+    name: 'company-id',
+    description: 'ID da empresa (UUID)',
+    required: false,
+    example: '91db60be-bad5-4d40-85fb-93d73a5fb966',
+  })
+  async findOne(
+    @Param('id') id: string, 
+    @CurrentUser() user: any, 
+    @IsCompanyAdmin() isAdmin: boolean,
+  ) {
+    if (isAdmin) {
+      return this.ordersService.findOne(id);
+    }
     return this.ordersService.findOne(id, user.id);
   }
 
