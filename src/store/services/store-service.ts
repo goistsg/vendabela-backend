@@ -79,7 +79,11 @@ export class StoreService {
     let orderBy: any = { createdAt: 'desc' };
     if (options?.orderBy) {
       const [field, direction] = options.orderBy.split(':');
-      orderBy = { [field]: direction === 'asc' ? 'asc' : 'desc' };
+      orderBy = { [
+        field === 'name' ? 'name' :
+        field === 'salePrice' ? 'salePrice' :
+        'createdAt'
+      ]: direction === 'asc' ? 'asc' : 'desc' };
     }
 
     const [products, total] = await Promise.all([
@@ -91,6 +95,7 @@ export class StoreService {
           category: true,
           sku: true,
           description: true,
+          ingredients: true,
           imageUrls: true,
           salePrice: true,
           stock: true,
