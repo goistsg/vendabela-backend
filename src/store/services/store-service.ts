@@ -6,41 +6,6 @@ export class StoreService {
   constructor(private prisma: PrismaService) {}
 
   /**
-   * Valida se a empresa existe e se o usuário tem acesso (ou se é pública)
-   * Permite acesso público a empresas não privadas
-   */
-  async validateCompanyAccess(companyId: string, userId?: string): Promise<void> {
-    const company = await this.prisma.company.findUnique({
-      where: { id: companyId },
-    });
-
-    if (!company) {
-      throw new NotFoundException(`Empresa com ID ${companyId} não encontrada`);
-    }
-
-    // Se a empresa é privada, precisa de autenticação e validação de acesso
-    if (company.isPrivate) {
-      if (!userId) {
-        throw new BadRequestException('Esta empresa é privada. Autenticação necessária.');
-      }
-
-      const userCompany = await this.prisma.userCompany.findUnique({
-        where: {
-          userId_companyId: {
-            userId,
-            companyId,
-          },
-        },
-      });
-
-      if (!userCompany) {
-        throw new BadRequestException('Você não tem acesso a esta empresa');
-      }
-    }
-    // Se a empresa é pública (isPrivate = false), permite acesso sem autenticação
-  }
-
-  /**
    * Lista produtos da empresa com filtros e paginação
    */
   async findAllByCompany(
@@ -54,8 +19,6 @@ export class StoreService {
       userId?: string;
     },
   ) {
-    await this.validateCompanyAccess(companyId, options?.userId);
-
     const page = options?.page || 1;
     const limit = Math.min(options?.limit || 20, 100); // Máximo 100 por página
     const skip = (page - 1) * limit;
@@ -125,8 +88,6 @@ export class StoreService {
    * Busca um produto específico por ID
    */
   async findOne(productId: string, companyId: string, userId?: string) {
-    await this.validateCompanyAccess(companyId, userId);
-
     const product = await this.prisma.product.findFirst({
       where: {
         id: productId,
@@ -164,8 +125,6 @@ export class StoreService {
    * Lista categorias únicas da empresa
    */
   async findAllCategories(companyId: string, userId?: string) {
-    await this.validateCompanyAccess(companyId, userId);
-
     const categories = await this.prisma.product.findMany({
       where: {
         companyId,
@@ -190,8 +149,6 @@ export class StoreService {
    * Lista produtos relacionados (baseado em recommendations)
    */
   async findRelatedProducts(productId: string, companyId: string, userId?: string) {
-    await this.validateCompanyAccess(companyId, userId);
-
     const product = await this.prisma.product.findFirst({
       where: { id: productId, companyId },
       select: { recommendations: true },
@@ -229,8 +186,6 @@ export class StoreService {
    * Lista produtos em destaque (mais vendidos ou mais recentes)
    */
   async findFeaturedProducts(companyId: string, limit: number = 10, userId?: string) {
-    await this.validateCompanyAccess(companyId, userId);
-
     // Buscar produtos mais vendidos (com mais pedidos)
     const topProducts = await this.prisma.orderProduct.groupBy({
       by: ['productId'],
